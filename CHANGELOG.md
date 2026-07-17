@@ -6,6 +6,49 @@ See [wireframes/](wireframes/) for the related diagrams (referenced inline below
 
 ---
 
+                ┌──────────────────────────────┐
+                │      ACTIVE TEMPLATE: T       │
+                │          T = 1...40           │
+                └──────────────┬───────────────┘
+                               │
+                               ▼
+            Is this template marked as a winner?
+                    │                      │
+                  YES                      NO
+                    │                      │
+                    ▼                      ▼
+           69-minute fill window    34m30s fill window
+                    │                      │
+                    └──────────┬───────────┘
+                               │
+          ┌────────────────────┼────────────────────┐
+          │                    │                    │
+          ▼                    ▼                    ▼
+      Entry fills          No fill by            Position is
+      before deadline      deadline              still open
+          │                    │                    │
+          │                    │                    └─ Keep template;
+          │                    │                       never rotate during
+          │                    │                       an open position
+          │                    ▼
+          │             Advance one:
+          │             T1 → T2 → ... → T40 → T1
+          │             Arm normal 34m30s window
+          │
+          ▼
+    Trade eventually closes
+          │
+    ┌─────┴──────┐
+    │            │
+    ▼            ▼
+  WIN          LOSS
+    │            │
+    ▼            ▼
+Stay on T     T2–T39 → T-1
+Arm 69m       T1 → T1
+window        T40 → T1
+              Arm normal 34m30s window
+
 ## Template Mode 3 rotation logic
 
 `temalimit` doesn't use one fixed set of rules all day. It has 40 different settings profiles ("templates"), numbered 1 (strictest, fewest trades) to 40 (loosest, most trades), and it rotates through them over time. The picture below shows the rotation logic:
