@@ -21,6 +21,66 @@ In plain terms:
 
 ---
 
+### Risk sizing now behaves differently after profile 19, so it can hit realistic per-contract limits (July 17, 2026)
+
+**What it was:** The formula from the entry below used one smooth growth curve for all 40 profiles per contract. That's mathematically clean, but it meant I couldn't independently choose "how much should the riskiest profile (40) risk" without also changing every profile below it in a fixed ratio — and for the S&P 500 (ES) contract specifically, the formula's normal rounding (to the nearest quarter-point, $12.50) started producing two neighboring profiles with the identical dollar amount once the profile numbers got high enough.
+
+**What it is now:** Profiles 1–19 keep using the original smooth formula. Profiles 20–40 switch to a second formula that's allowed to grow at a different rate, so I can set "what does profile 40 risk" independently of "what does profile 1 risk." For the S&P 500 specifically, profiles 20–40 grow by a fixed one-tick ($12.50) step per profile instead of a smooth curve — the only way to guarantee no two profiles ever land on the same dollar number given how coarse that contract's price increments are.
+
+**Profile 1 → Profile 40, in dollars (per-trade risk / daily "keep trying" budget):**
+
+| Contract | Profile 1 | Profile 40 |
+| --- | --- | --- |
+| Nasdaq (NQ) | $500 / $375 | $1,000 / $800 |
+| S&P 500 (ES) | $312.50 / $300 | $812.50 / $787.50 |
+| Russell 2000 (RTY) | $200 / $150 | $500 / $375 |
+| Dow (YM) | $100 / $75 | $400 / $300 |
+
+Verified by simulating all 40 profiles for all 4 contracts: no two profiles ever risk the identical dollar amount, the amount always increases with the profile number, the daily budget always stays below the per-trade risk, and Nasdaq always risks more than the S&P 500, which always risks more than the Russell, which always risks more than the Dow, at every single profile.
+
+![Two-tier risk sizing wireframe](wireframes/risk_sizing_wireframe.svg)
+
+### Fixed: a file sync accident deleted a chunk of recent work, including an entire AI feature, without anyone noticing at first (July 17, 2026)
+
+**What happened:** While reconciling two versions of the strategy file (one on this computer, one that had been uploaded through GitHub's website), the merge silently kept the older, uploaded version's code in two places instead of properly combining both sides. That wiped out the risk-formula rewrite above, and separately, it deleted the entire "AI can now pick the next settings profile" feature described further down — including the code that logs practice trades for that AI to learn from.
+
+**How it was caught:** While investigating why some AI training data looked corrupted (see next entry), a search for the AI-template-selection code came up empty in the strategy file — even though NinjaTrader was still actively running it and still writing fresh training data. That only made sense if NinjaTrader was running an older, already-compiled version of the strategy that still had the feature, while the source file on disk had lost it. Comparing against an earlier saved version of the file confirmed it: the feature was gone from the file, but recoverable from an older save.
+
+**The fix:** Restored the missing feature from the last version that had it, rebuilt carefully on top of the (also-since-changed) risk formula so nothing else broke, and double-checked nothing besides these two things was actually missing.
+
+### Fixed: one data-quality bug, and hardened against future ones (July 17, 2026)
+
+While reviewing the AI's practice-trade data, one real trade was logged as having moved over 22,000 points against the position — impossible for a contract that only trades in a roughly 700-point range total. The exact cause couldn't be pinned down for certain, but the fix doesn't require knowing the exact cause: the strategy now refuses to record any single-trade price swing bigger than a generous sanity limit, logging a warning instead so a repeat is actually visible rather than silently poisoning the data again.
+
+### The No-Fill Log dashboard card can now suggest widening or narrowing the entry-price cushion, based on real measurements (July 17, 2026)
+
+**What it was:** The dashboard already tracked orders that never filled (because price didn't pull back far enough to reach the order), but had no way to say by how much they missed, or whether the cushion should change.
+
+**What it is now:** The strategy now measures, for every unfilled order, the closest the market actually got to the order's price before giving up. The dashboard uses that to suggest a smaller cushion for profiles/contracts that are consistently missing by a similar amount — and, in the other direction, a slightly bigger cushion for profiles that are filling every single time with room to spare (which might mean a better price was being left on the table). Suggestions only appear once there's enough real evidence (5+ measurements); thinner evidence just gets flagged as "keep watching."
+
+![Pullback suggestion wireframe](wireframes/pullback_feedback_wireframe.svg)
+![No-Fill Log bidirectional suggestion wireframe](wireframes/nofill_pullback_column_wireframe.svg)
+
+### New dashboard card: Sizing Reassess (July 17, 2026)
+
+Tracks, per contract and profile, how far real trades moved against the position before turning around (informs whether the per-trade risk amount has room to shrink or needs more room), and how much of a trade's peak profit actually got captured versus given back before it closed (informs the same question for the daily "keep trying" budget). Reversal trades — ones that built real profit and still closed at a loss — are shown as a plain dollar amount ("gave back $860 of $845 peak") rather than a percentage, since percentages built off a small profit peak can swing wildly and be misleading.
+
+### The dashboard can now edit the strategy's own settings automatically — with a lot of guardrails (July 17, 2026)
+
+**What it is:** A new background check, running every 5 minutes, reads the same evidence as the two cards above and — only when every profile that has enough real evidence for a given contract-and-setting agrees on the same direction — edits the strategy file to match. If even one qualifying profile disagrees, nothing happens; that setting just keeps collecting data.
+
+**Guardrails:**
+- Requires real, measured evidence (never a guess) for the "narrow the entry cushion" and "reduce per-trade risk" directions. The opposite directions (widen the cushion, raise the daily budget) are clearly labeled as an educated nudge rather than a measurement, since there's no direct way to measure "how much tighter could this safely be."
+- Before writing anything, re-simulates the entire 40-profile curve for whatever's being changed and checks the same rules verified above still hold (no two profiles land on the same dollar amount, amounts always increase, Nasdaq > S&P 500 > Russell > Dow, and the daily budget always stays under the per-trade risk). If the change would break any of that, it's rejected and nothing is written.
+- Saves a full backup of the strategy file before every single edit.
+- Every check — whether anything changed or not — is written to a log file.
+
+**Two real bugs already caught by watching it run for real, not just by reasoning about the design:**
+1. One suggestion turned out to be built on a single real measurement, even though the underlying count looked like plenty of evidence — most of the other events it was "backed by" turned out to predate the measurement being logged at all. Fixed by counting only entries that actually have a real measurement.
+2. Because the file only stores a couple of decimal places, one suggested value kept getting rounded down on write, which meant every 5-minute check saw a persistent (if tiny) mismatch and "corrected" it again — forever, without the file ever actually changing. Fixed by storing more decimal places.
+
+---
+
 ### Risk-per-trade is now calculated by a formula, not a fixed price list (July 16, 2026)
 
 **What it was:** Every combination of futures contract (Nasdaq/NQ, S&P 500/ES, Russell/RTY, Dow/YM) and settings profile (1–40) had its own hand-typed dollar amount in a price list — 160+ numbers to maintain by hand.

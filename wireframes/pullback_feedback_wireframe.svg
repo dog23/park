@@ -1,0 +1,93 @@
+<svg viewBox="0 0 1000 760" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>Pullback tick auto-adjustment fed by the Limit No-Fill Log</title>
+<desc>The dashboard's Limit No-Fill Log already groups no-fill counts by Template x Instrument. A new formula reads each bucket's no-fill count, compares it to a threshold, and proposes a percentage reduction to that instrument's pullback ratio -- more no-fills means the pullback distance is calibrated too wide for that instrument to realistically hit before its order expires.</desc>
+
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#556070"/>
+  </marker>
+  <marker id="arrowAccent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+  </marker>
+</defs>
+
+<style>
+  text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #1a1f27; }
+  .box { fill: #f4f6f8; stroke: #6b7684; stroke-width: 1; }
+  .boxTitle { font-size: 15px; font-weight: 600; }
+  .boxSub { font-size: 12px; fill: #4b5563; }
+  .boxMono { font-size: 11px; fill: #374151; font-family: Consolas, "Courier New", monospace; }
+  .edgeLabel { font-size: 12px; fill: #4b5563; }
+  .edge { fill: none; stroke: #556070; stroke-width: 1.5; }
+  .edgeAccent { fill: none; stroke: #3b82f6; stroke-width: 1.5; }
+  .sectionLabel { font-size: 13px; font-weight: 600; fill: #4b5563; }
+  .th { font-size: 11px; font-weight: 600; fill: #1a1f27; }
+  .td { font-size: 11px; fill: #374151; }
+  .tdMuted { font-size: 11px; fill: #6b7684; }
+</style>
+
+<rect x="0" y="0" width="1000" height="760" fill="#ffffff"/>
+
+<!-- Existing card -->
+<rect x="300" y="16" width="400" height="70" rx="8" class="box"/>
+<text x="500" y="40" text-anchor="middle" class="boxTitle">Limit No-Fill Log (existing dashboard card)</text>
+<text x="500" y="58" text-anchor="middle" class="boxSub">Grouped rows: Template x Instrument -> No-Fills, Avg Wait</text>
+<text x="500" y="76" text-anchor="middle" class="tdMuted">unchanged — no card edits needed</text>
+
+<path class="edge" d="M500,86 L500,118" marker-end="url(#arrow)"/>
+
+<!-- Per-bucket extraction -->
+<rect x="230" y="118" width="540" height="60" rx="8" class="box"/>
+<text x="500" y="140" text-anchor="middle" class="boxTitle">For each Template x Instrument row already on the card</text>
+<text x="500" y="160" text-anchor="middle" class="boxMono">NoFillCount, AvgWaitBeforeCancel  (from the visible table)</text>
+
+<path class="edge" d="M500,178 L500,210" marker-end="url(#arrow)"/>
+
+<!-- Formula box -->
+<rect x="180" y="210" width="640" height="150" rx="8" class="box" stroke="#3b82f6" stroke-width="1.5"/>
+<text x="500" y="234" text-anchor="middle" class="boxTitle">New: Suggested Pullback Adjustment (per row)</text>
+<text x="500" y="258" text-anchor="middle" class="boxMono">ExcessNoFills = max(0, NoFillCount − Threshold)</text>
+<text x="500" y="278" text-anchor="middle" class="boxMono">ReductionPct = min(MaxReduction, Sensitivity x ExcessNoFills)</text>
+<text x="500" y="298" text-anchor="middle" class="boxMono">SuggestedRatio = CurrentPullbackRatio x (1 − ReductionPct)</text>
+<text x="220" y="326" class="td">Threshold = 3 no-fills (ignore normal noise)</text>
+<text x="220" y="344" class="td">Sensitivity = 3% per no-fill over threshold</text>
+<text x="580" y="326" class="td">MaxReduction = 30% (safety clamp)</text>
+<text x="580" y="344" class="td">Existing Math.Max(1, ...) tick floor still applies</text>
+
+<path class="edge" d="M500,360 L500,392" marker-end="url(#arrow)"/>
+
+<!-- Example output table using today's actual screenshot numbers -->
+<rect x="140" y="392" width="720" height="160" rx="8" class="box"/>
+<text x="500" y="414" text-anchor="middle" class="boxTitle">Example — today's screenshot numbers run through the formula</text>
+<text x="170" y="438" class="th">Row</text>
+<text x="290" y="438" class="th">No-Fills</text>
+<text x="410" y="438" class="th">Excess</text>
+<text x="520" y="438" class="th">Reduction</text>
+<text x="650" y="438" class="th">Action</text>
+
+<text x="170" y="458" class="td">T29 RTY</text><text x="290" y="458" class="td">8</text><text x="410" y="458" class="td">5</text><text x="520" y="458" class="td">15%</text><text x="650" y="458" class="td">narrow RTY pullback -15%</text>
+
+<text x="170" y="478" class="td">T39 RTY</text><text x="290" y="478" class="td">5</text><text x="410" y="478" class="td">2</text><text x="520" y="478" class="td">6%</text><text x="650" y="478" class="td">narrow RTY pullback -6%</text>
+
+<text x="170" y="498" class="td">T32 ES</text><text x="290" y="498" class="td">3</text><text x="410" y="498" class="td">0</text><text x="520" y="498" class="td">0%</text><text x="650" y="498" class="tdMuted">within normal range, no change</text>
+
+<text x="170" y="518" class="td">T34 ES</text><text x="290" y="518" class="td">3</text><text x="410" y="518" class="td">0</text><text x="520" y="518" class="td">0%</text><text x="650" y="518" class="tdMuted">within normal range, no change</text>
+
+<text x="170" y="538" class="td">T38 ES</text><text x="290" y="538" class="td">3</text><text x="410" y="538" class="td">0</text><text x="520" y="538" class="td">0%</text><text x="650" y="538" class="tdMuted">within normal range, no change</text>
+
+<path class="edgeAccent" d="M500,552 L500,584" marker-end="url(#arrowAccent)"/>
+
+<!-- Important scope note -->
+<rect x="140" y="584" width="720" height="130" rx="8" class="box" stroke="#3b82f6"/>
+<text x="500" y="606" text-anchor="middle" class="boxTitle">Scope note</text>
+<text x="500" y="628" text-anchor="middle" class="td">This formula only ever proposes changes to PullbackTicksForTicker's per-instrument ratio.</text>
+<text x="500" y="646" text-anchor="middle" class="td">It never touches UniversalBase, InstrumentMultiplier, LadderMultiplier, or the Tier 2 targets --</text>
+<text x="500" y="664" text-anchor="middle" class="td">no-fill counts measure whether an order's price gets hit, not whether its dollar risk is sized right.</text>
+<text x="500" y="690" text-anchor="middle" class="tdMuted">RTY's two flagged rows both trend toward "widen the entry, don't touch its size."</text>
+
+<!-- Legend -->
+<rect x="330" y="732" width="14" height="14" fill="none" stroke="#6b7684"/>
+<text x="352" y="743" class="edgeLabel">existing card / unchanged data</text>
+<rect x="570" y="732" width="14" height="14" fill="none" stroke="#3b82f6"/>
+<text x="592" y="743" class="edgeLabel">proposed new formula (not yet built)</text>
+</svg>
