@@ -40,7 +40,7 @@ The "daily keep trying budget" is always smaller than the per-trade risk amount,
 
 Nothing else about how the strategy enters or exits trades, talks to the AI service, rotates profiles, or logs data was touched — this change only affects how the dollar risk amount is calculated.
 
-See [wireframes/risk_sizing_wireframe.svg](wireframes/risk_sizing_wireframe.svg) for the sizing diagram.
+![Risk sizing wireframe](wireframes/risk_sizing_wireframe.svg)
 
 ### AI can now pick the next settings profile instead of just cycling through them (July 15, 2026)
 
