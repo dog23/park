@@ -64,6 +64,42 @@ In plain terms:
 
 ---
 
+### New: a separate laptop hardware monitor, to help decide if this machine really needs 128GB of RAM (July 19, 2026)
+
+This one has nothing to do with the trading strategies or the AI -- it's a standalone background tool that watches the laptop itself (memory, CPU, GPU) to answer one question: can this workload run comfortably on 64GB of RAM instead of 128GB?
+
+- Every 15 seconds it checks memory used, how hard Windows is leaning on the pagefile, CPU load, and GPU/video-memory use, and keeps a running log.
+- It only sends a phone alert when something *changes in a lasting way* -- never for a brief spike. You'll hear from it when usage crosses into a risk zone for a few minutes straight, when it drops back down, or if CPU/GPU stays pegged for several minutes. Otherwise it stays silent.
+- Each alert ends with a plain recommendation: "64GB likely safe," "64GB borderline," or "keep 128GB" -- based on how much memory is actually being used and how much pressure is on the pagefile, not guesswork.
+- Phone alerts go through the same free notification service the trading alerts use, but on its own separate channel, so hardware alerts and trading alerts don't get mixed together.
+- It starts automatically when the laptop is logged into and runs quietly in the background with no window, restarting itself if it ever has a problem -- same setup as the other background watchdogs already protecting this machine.
+
+Nothing about trading logic, data, or the AI changed -- this is a separate, independent tool living alongside the trading system.
+
+### Investigated the two red "drift" warnings -- verdict: the market changed, the data didn't break (July 19, 2026)
+
+The new Models-page attention bar was flagging two failing data checks. Digging in showed both trace back to the same real-world event: July 16-17 were strongly falling, more volatile days, very different from the calmer July 5-15 stretch the AI's training data mostly comes from.
+
+- **"Label distribution drift"**: recent practice trades suddenly skew heavily toward "short" -- because shorts genuinely kept winning on those two down days, across several markets at once. That's the market, not a bookkeeping bug. Two small markets were failing this check on barely a dozen recent samples, which is statistical noise -- the check now needs at least 40 recent samples before it's allowed to raise a red flag (it shows an amber note instead). The one legitimately large shift (NQ 60-Range, 416 recent samples) still shows red, honestly.
+- **"Feature drift"**: mostly driven by two inputs that literally measure price level and volatility -- of course they move when the market trends. Those now get their own amber "level drift" note instead of a red flag. Interestingly, once they stopped hogging the report, it turned out the trend/volatility change also shifted several other inputs past the red line -- so this check stays honestly red for now: the AI really is seeing market conditions unlike most of its training history. Every check that would indicate actual data corruption still passes.
+
+Both red flags should fade on their own as more post-July-16 data accumulates. If they're still red in a week, that's a real signal worth acting on. Only the checking logic changed -- no trading behavior, data, or models were touched.
+
+Later the same day, the identical fix was applied to the trend robot's dashboard (port 8767): its oil-market label warning dropped from red to amber (it rested on just 17 recent samples), and its input-drift check now files the "how trendy/choppy is the market" gauges under an amber regime note -- it stays honestly red for now because a genuinely stationary input also shifted with the trend.
+
+### The three dashboards got one shared look, and each one now has a clear job (July 18, 2026)
+
+Until now the three dashboards looked like three different products, and the live-trading page was crowded with engineering panels that made visitors ask "what is this stuff?". They have been redesigned around one rule: **the live page is for anyone; the other pages are for engineers.**
+
+- **Live (port 8766) is now the splash page.** One big profit/loss number with the equity chart and time-range buttons right under it, the open/pending/completed trade lists, and a single "Breakdown" card with tabs (by market, direction, session, exit reason). Anything jargon-heavy moved out. A small "Models" chip in the header answers "are the robots healthy?" with a green dot and links to the details.
+- **A new "Ops" page (port 8765/ops) is the engineers' room.** All six auto-tuning evidence panels that used to crowd the live page (Reassess Activity, Template Coverage & Usage, No-Fill Log, ATR Pullback, Sizing Reassess, Entry Gate Reassess) live there now, unchanged, fed live from the same data.
+- **Models (port 8765) leads with the verdict.** A header chip shows how many integrity checks pass, and a red "Attention" bar appears only when something is actually failing -- no more reading sixteen sections to find the one problem. The five sample-distribution tables merged into one tabbed "Data Mix" card.
+- **Trend (port 8767) is card-first.** Each market gets a card showing its status, progress toward the 100-sample training gate, and accuracy once trained; the giant 14-column table is still there, one click away. The four "Recent ..." tables merged into one "Activity" feed with tabs.
+- **One visual language everywhere:** flat dark panels, no neon gradients or glow, red and green reserved strictly for losses/wins and failures/passes, no emoji. Every page links to the other three from its header, and the restart/retrain buttons moved into a tidy "..." menu so they cannot be clicked by accident.
+- **Phones work now.** The Models and Trend pages had no phone layout at all (tables scrolled sideways inside cards); every table now folds into neat label/value rows on a small screen, and the live page gets a thumb-reach tab bar at the bottom. Card dragging on the live page is behind an explicit "Edit layout" button, so browsing cannot accidentally rearrange things.
+
+Nothing about trading logic, data collection, or the AI changed -- this is purely how the information is presented.
+
 ### Fixed: practice-trade data was occasionally filed under the wrong market, and the AI's report card was too easy to ace (July 18, 2026)
 
 Two data-honesty problems in `temalimit`'s AI (the port-8765 server), found by auditing every practice trade it has ever recorded:
