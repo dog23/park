@@ -12,6 +12,8 @@ The market's July 16–17 selloff set off two data alarms. This patch teaches th
 
 ### ✨ New
 - **Laptop hardware monitor.** A standalone background tool watches the machine's memory, pagefile pressure, CPU, and GPU every 15 seconds to answer one question: can this workload live on 64GB of RAM instead of 128GB? It only pings the phone on *lasting* changes — never brief spikes — and every alert ends with a plain verdict: "64GB likely safe," "64GB borderline," or "keep 128GB." Runs on its own notification channel, starts at login, restarts itself on failure. Completely independent of the trading system.
+- **The data-integrity checks now also run themselves once a day**, right after the 14:00 model retrain — previously they only ran when someone clicked a button, so a real problem could go unnoticed indefinitely between manual checks. This is the one moment each day the training data actually changes, so it's the only moment a fresh check can find something new.
+  *Dev note: prompted by a fair question — "if the Run button is always clickable, how would I know when to actually click it?" The clickable state was never meant to mean "due for a run"; now there's an actual daily run to rely on, and the panel's description spells out the difference.*
 
 ### ⚖️ Balance (data alarms)
 - The **label-drift alarm** now needs 40+ recent samples before it may go red; thinner evidence shows an amber note instead.
