@@ -23,6 +23,8 @@ The market's July 16–17 selloff set off two data alarms. This patch teaches th
 
 ### 🐛 Fixed
 - Animated counters (the big profit number, stat cards) froze at stale values while a dashboard tab sat in the background. They now update instantly whenever the tab isn't visible and only animate while you're actually watching.
+- **The live dashboard's "Data Series" breakdown could show 0 trades no matter what time range you picked** — including "All time" — for an actively-traded strategy that simply hadn't traded in the last 24 hours (like over a weekend). Every other breakdown tab (Instrument, Direction, Session, Exit Signal) kept showing that same strategy's trades just fine, so only this one tab looked broken.
+  *Dev note: an old "hide deprecated strategies" filter was being applied to Data Series before the time-range filter ever ran, so no range selection could undo it. Removed that filter from this one spot — it now follows the same rules as its sibling tabs. Confirmed fixed across All/5D/3D/2D/1D, matching the Instrument tab's counts exactly at every range.*
 
 ### 🧭 Known issues
 - Two drift alarms remain honestly red (NQ 60-Range labels; several trend-geometry inputs): the market genuinely looks different after July 16–17. Expected to clear as new data accumulates — still red in a week means it's a real signal worth acting on.
