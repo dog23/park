@@ -2,65 +2,7 @@
 
 Plain-English changelog for the `temalimit` strategy (and other NT8 trading code). This used to live in the `soy` repo's README; it now lives here so `park` is the single home for changelogs and wireframes/diagrams across all NT8 projects.
 
-See [wireframes/](wireframes/) for the related diagrams (referenced inline below).
-
----
-
-                ┌──────────────────────────────┐
-                │      ACTIVE TEMPLATE: T       │
-                │          T = 1...40           │
-                └──────────────┬───────────────┘
-                               │
-                               ▼
-            Is this template marked as a winner?
-                    │                      │
-                  YES                      NO
-                    │                      │
-                    ▼                      ▼
-           69-minute fill window    34m30s fill window
-                    │                      │
-                    └──────────┬───────────┘
-                               │
-          ┌────────────────────┼────────────────────┐
-          │                    │                    │
-          ▼                    ▼                    ▼
-      Entry fills          No fill by            Position is
-      before deadline      deadline              still open
-          │                    │                    │
-          │                    │                    └─ Keep template;
-          │                    │                       never rotate during
-          │                    │                       an open position
-          │                    ▼
-          │             Advance one:
-          │             T1 → T2 → ... → T40 → T1
-          │             Arm normal 34m30s window
-          │
-          ▼
-    Trade eventually closes
-          │
-    ┌─────┴──────┐
-    │            │
-    ▼            ▼
-  WIN          LOSS
-    │            │
-    ▼            ▼
-Stay on T     T2–T39 → T-1
-Arm 69m       T1 → T1
-window        T40 → T1
-              Arm normal 34m30s window
-
-## Template Mode 3 rotation logic
-
-`temalimit` doesn't use one fixed set of rules all day. It has 40 different settings profiles ("templates"), numbered 1 (strictest, fewest trades) to 40 (loosest, most trades), and it rotates through them over time. The picture below shows the rotation logic:
-
-![Template Mode 3 rotation wireframe](wireframes/mode3_wireframe.svg)
-
-In plain terms:
-- Every time an order is placed, there's a countdown. If the profile that placed the order has won a trade before, it gets more time to fill (69 minutes); if not, it gets less (about 34 minutes).
-- If the order fills in time, the strategy trades it out normally.
-- If it doesn't fill in time, the strategy gives up on that profile and moves to the next one in line.
-- Once a trade is open, the strategy never switches profiles until that trade is closed.
-- After a **win**, it keeps using the same profile. After a **loss**, it steps back one profile (gets a little stricter), unless it was already on the strictest one, in which case it resets to profile 1.
+See [wireframes/](wireframes/) for the related diagrams (referenced inline below). Static reference material (not changelog entries) lives at the [bottom of this file](#reference-template-mode-3-rotation-logic) so the newest dated entry always stays on top.
 
 ---
 
@@ -307,3 +249,63 @@ Separately, a related setting ("ignore session restrictions entirely" for the fu
 ### Documented ML template selection (July 15, 2026)
 
 Documented how the AI template-selection switch works in the changelog (see entry above, "AI can now pick the next settings profile...").
+
+---
+
+## Reference: Template Mode 3 rotation logic
+
+*(Static reference material, not a changelog entry — kept here at the bottom so the newest dated entry stays on top.)*
+
+                ┌──────────────────────────────┐
+                │      ACTIVE TEMPLATE: T       │
+                │          T = 1...40           │
+                └──────────────┬───────────────┘
+                               │
+                               ▼
+            Is this template marked as a winner?
+                    │                      │
+                  YES                      NO
+                    │                      │
+                    ▼                      ▼
+           69-minute fill window    34m30s fill window
+                    │                      │
+                    └──────────┬───────────┘
+                               │
+          ┌────────────────────┼────────────────────┐
+          │                    │                    │
+          ▼                    ▼                    ▼
+      Entry fills          No fill by            Position is
+      before deadline      deadline              still open
+          │                    │                    │
+          │                    │                    └─ Keep template;
+          │                    │                       never rotate during
+          │                    │                       an open position
+          │                    ▼
+          │             Advance one:
+          │             T1 → T2 → ... → T40 → T1
+          │             Arm normal 34m30s window
+          │
+          ▼
+    Trade eventually closes
+          │
+    ┌─────┴──────┐
+    │            │
+    ▼            ▼
+  WIN          LOSS
+    │            │
+    ▼            ▼
+Stay on T     T2–T39 → T-1
+Arm 69m       T1 → T1
+window        T40 → T1
+              Arm normal 34m30s window
+
+`temalimit` doesn't use one fixed set of rules all day. It has 40 different settings profiles ("templates"), numbered 1 (strictest, fewest trades) to 40 (loosest, most trades), and it rotates through them over time. The picture below shows the rotation logic:
+
+![Template Mode 3 rotation wireframe](wireframes/mode3_wireframe.svg)
+
+In plain terms:
+- Every time an order is placed, there's a countdown. If the profile that placed the order has won a trade before, it gets more time to fill (69 minutes); if not, it gets less (about 34 minutes).
+- If the order fills in time, the strategy trades it out normally.
+- If it doesn't fill in time, the strategy gives up on that profile and moves to the next one in line.
+- Once a trade is open, the strategy never switches profiles until that trade is closed.
+- After a **win**, it keeps using the same profile. After a **loss**, it steps back one profile (gets a little stricter), unless it was already on the strictest one, in which case it resets to profile 1.
