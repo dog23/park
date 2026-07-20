@@ -62,7 +62,9 @@ Run them the same way (`/run-check` with the name above), or use **`POST /run-ab
 
 ## Model states, sample sizes & gate thresholds
 
-The exact rules that decide whether a model is *warming up*, *recommending*, or *trading*. All values are the current code defaults (`ml_model.py`, `exit_model.py`, `service.py`).
+The exact rules that decide whether a model is *warming up*, *recommending*, or *trading*.
+
+> **These are the current code defaults.** If you retune anything, the source is authoritative — find the named constant (`MIN_SAMPLES_PER_GROUP`, `VAL_BASE_RATE_MARGIN`, `EXIT_MODEL_MIN_VAL_AUC`, `PHASE3_MIN_*`, etc.) in `ml_model.py` / `exit_model.py` / `service.py` for its live value, since this page can drift when a threshold changes.
 
 ### Entry model
 
