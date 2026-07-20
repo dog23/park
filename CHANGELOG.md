@@ -20,6 +20,29 @@ The exit robot has been learning from trades whose endings were missing. Not cor
 
 ---
 
+## Patch 2026-07-20d — "The Safety Catch Nobody Could Release"
+
+The real-money account has never placed a single trade in its entire existence. Today we found out why, and it was never going to fix itself.
+
+### 🐛 Fixed
+- **A safety limit was silently blocking every trade on the live account.** The robot has an optional cap on how much margin it will tie up at once. To enforce it, it asks NinjaTrader "how much margin does one NQ contract cost?" — and NinjaTrader has no answer, for any contract, on any account. Rather than guess, the robot refuses to trade. It was refusing *every single time*, all day, every day, since the account was created.
+- **The error message told you to fix it in a place that cannot fix it.** It said to set the margin under Instruments → NQ → Risk. That screen does not feed the setting the robot actually reads — in fact NinjaTrader has no per-contract margin field anywhere. Following the instruction exactly, as one would, changed nothing. The message now names the real fix.
+- **Margins are now written directly into the strategy**: NQ $1,000, ES/YM/RTY $500 each. The cap can finally do its job.
+
+### ⚖️ Balance
+- **Now that the cap works, it actually bites.** At the current $1,000 setting the live account can hold **one NQ contract, or two of the smaller ones, and nothing more**. That was always the intended limit; it was just unreachable before because nothing could get past the broken check at all. Raise the cap if you want more than that at once.
+
+### 🧠 Under the hood
+- **The proof was a side-by-side.** A practice account was running a genuinely identical setup — same chart type, same four markets, same strategy settings, same selectivity — and placed 37 orders while the live account placed zero. The live account had *more* qualifying setups, not fewer.
+  *Dev note: I first explained the silence as "this account runs a more selective configuration, so fewer trades is expected". That was wrong, and the identical-twin comparison is what killed it. A tidy explanation that fits the symptom is not the same as a verified cause, and I reached for one twice in this session.*
+  *Second dev note: worse, I flagged this exact margin setting as the likely culprit in my very first reply, then talked myself out of it because a settings tooltip appeared to show it switched off. The tooltip was for a different robot. A live error message beats a static screenshot; I overturned a correct conclusion using weaker evidence and cost us most of a session.*
+
+### ⚠️ Known issues
+- **Still zero real fills.** The fix clears the blockage but proves nothing until an order actually goes through. Everything the entry logic knows about being filled, it learned from practice accounts.
+- **The robot is reloading now and needs 20–40 minutes before it can trade.** Leave it alone until it says it's live.
+
+---
+
 ## Patch 2026-07-20c — "False Alarm, Correctly Handled"
 
 An order rejection that looked like a returning bug turned out to be the safety system doing exactly its job, for twelve dollars and fifty cents.
