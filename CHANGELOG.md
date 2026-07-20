@@ -6,6 +6,20 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ---
 
+## Patch 2026-07-20g — "The Escape Map Was Two Days Old"
+
+Did a full check of the disaster-recovery setup — the off-site backups that would rebuild everything if the machine died. The good news: it works, and today's earlier fix to the off-site upload is confirmed doing its job. The catch: the one document that explains *how* to recover was quietly out of date inside every backup.
+
+### 🐛 Fixed
+- **The recovery guide shipped in the off-site backups was two days stale.** There are two copies of the guide: the living one that gets edited daily, and an old sidecar copy in the backup folder. The daily backup was grabbing the *sidecar* — frozen at July 18 — so every off-site copy carried a recovery manual missing the last two days of hard-won incident notes. The current guide did still leave the machine, but only buried inside the code-history bundle, not as something you could just open and read. The backup now takes the living guide directly, and the stale sidecar was refreshed so nothing's out of date in the meantime.
+
+### ✅ Verified healthy
+- Off-site upload to cloud storage is running (today's fix confirmed — a backup left the machine at 14:11, with proper dedup and "keep newest three" cleanup). Local backups are complete (252 files, nothing missing). The latest off-site copy contains everything needed to rebuild from bare metal: the scheduled-task definitions, the cloud-storage config, and full code history for both repositories. Today's strategy fix, the new orphaned-stop alarm, and the corrected trade journal are all off the machine.
+
+*Dev note: the only remaining lag is normal and self-correcting — the newest auto-commit always rides the next backup cycle rather than the current one, so "off-site" means "current as of the last run," not "current to the second." That's how periodic backups work; not worth engineering away.*
+
+---
+
 ## Patch 2026-07-20f — "A Stop With Nothing to Stop"
 
 When the machine came back after its restart, NinjaTrader tidied up the frozen positions on its own — and closed the stuck NQ short at a genuine **+$4,340**. But it left one thing behind: the stop-loss placed by hand earlier was still sitting in the market with no trade behind it, quietly following the price down. A stop like that isn't protecting anything — if price had ticked back up to it, it would have *opened a brand-new trade* out of nowhere. The safety alarm never noticed, because it was only ever taught to look for the opposite problem.
