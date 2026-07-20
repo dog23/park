@@ -8,18 +8,20 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ## Patch 2026-07-20h — "Sweeping Up the Trades That Never Said Goodbye"
 
-The verification suite was flagging a failure, so I dug in. Earlier today's fix stopped the strategy from *creating* trades that forget to record their exit — but it couldn't go back and fix the ones already broken. Thirteen trades from the last day and a half had closed without ever writing their "I exited here" marker, leaving **22,651 rows** of training data that quietly teach the model a lie: that positions never get out. This patch cleans them up.
+The verification suite was flagging failures, so I dug in — and two of them turned out to be worth fixing in very different ways. One was real data damage to clean up; the other was a health check counting wrong. Earlier today's fix stopped the strategy from *creating* trades that forget to record their exit — but it couldn't go back and fix the ones already broken. Thirteen trades from the last day and a half had closed without ever writing their "I exited here" marker, leaving **22,651 rows** of training data that quietly teach the model a lie: that positions never get out. This patch cleans those up, and separately teaches the "label drift" check to stop raising false alarms.
 
 ### 🐛 Fixed
 - **Removed 13 "exitless" trades that were poisoning the exit model's training data.** Each one was a real, closed trade whose final exit was never recorded (all closed *before* today's earlier fix went in), so its entire history read as one long "still holding" with no ending. Left in place, they'd bias the model toward holding trades too long. They're not deleted — every row was moved into a dated archive folder first, so the evidence is kept. The failing health check went straight back to green afterward.
+- **A second health check was crying wolf.** The "label drift" check watches whether the mix of long/short/no-trade signals shifts suddenly (a sign something broke in labeling). It was flagging a false alarm on the 1-minute ES data. The cause: when the strategy shadow-tests a setup across all 40 templates, it writes one near-identical row per template — so a single real setup can look like 40. The check was counting all of them, while the model that actually trains on this data throws the duplicates away first. Two long setups looked like a flood of longs. The check now counts the same de-duplicated way the trainer does; the false alarm is gone (it drops to a mild, honest "heads up" instead), and this fixed the same over-counting for every other symbol too.
 
 ### 🛠️ Under the hood
 - New cleanup tool picks trades to quarantine by the *exact same rule* the health check uses (closed, and no recorded exit), rather than a hardcoded date — so it stays correct if this ever recurs. It refuses to touch anything that might still be an open position (30-minute safety margin), archives before it removes, and preserves any rows the live service writes while it runs.
+- The label-drift fix reuses the de-duplication logic the duplicate-scan check already had, so the two checks now agree on what "the data" means. Each result also now reports both its raw and de-duplicated row counts so the gap is visible at a glance.
 
 ### ⚠️ Known issues
 - One lookalike trade in a different data series shares an ID with a cleaned one (IDs are timestamp + symbol, so two series can collide). It also has no recorded exit but is still inside the "might be open" window, so it was deliberately left alone — it'll either record its exit normally or get caught on a later check.
 
-*Dev note: root cause and the strategy-side fix are in patch 20-07-20e / the midday guide entry; this patch is purely the data cleanup for the orphans that predate it. The check reads the files directly, so no service restart was needed to clear it.*
+*Dev note: the exit-model root cause and the strategy-side fix are in patch 20-07-20e / the midday guide entry; the cleanup half of this patch is purely for the orphans that predate it (that check reads the files directly, so it cleared with no restart). The label-drift fix is a code change to the health service, so it needs an 8765 restart before the live dashboard shows the corrected verdict — validated out-of-process against live data in the meantime.*
 
 ---
 
