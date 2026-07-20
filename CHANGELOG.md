@@ -6,6 +6,20 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ---
 
+## Patch 2026-07-20d — "The Exits That Never Got Written Down"
+
+The exit robot has been learning from trades whose endings were missing. Not corrupted — missing. Yesterday's fix caught most of them; today's found the rest, and corrected a wrong diagnosis of my own along the way.
+
+### 🐛 Fixed
+- **Trades closed by hand never told the learning system they'd ended.** When a position is flattened manually — or by NinjaTrader itself, or recovered after a crash — the trade is recorded properly in the P&L, the dashboard and the template ledger. That was fixed yesterday. But the *learning* log never heard about it. Every one of those closes left behind a long transcript reading "still holding, still holding, still holding" that simply stops, with no ending. Thirteen trades closed that way in a single day. The exit robot was being taught, quite literally, that positions never close. It now records the ending on those closes too.
+  *Dev note: worth being honest that this corrects my own work. Yesterday I built a retry-and-queue system on the assumption the endings were being sent and lost in transit. They weren't — the queue file was never created, because nothing was ever sent. The send only ever happened when the broker reported a fill, and a manual flatten isn't a fill. The retry work still earns its keep as insurance, but it fixed a failure that wasn't happening. The new check I added yesterday is what caught it — it kept failing on six fresh trades after the "fix," which is exactly what a good alarm is supposed to do.*
+  *Second dev note: there's a subtle trap here. A manual flatten records the exit at the current market price, but sometimes a real broker fill arrives moments later and wins the race — the trade record already has a correction step for precisely this. Without care, such a trade would now record its ending **twice**. Duplicates matter more than usual here: "exit" moments are desperately scarce in this data (one chart type has four of them in seventy thousand rows), so a double-count would corrupt the very thing we're short of. First recording wins; the later fill corrects the trade record, not the learning row.*
+
+### ⚠️ Known issues
+- Three trades on three different markets stopped logging at the exact same second, with only one matching close. That doesn't fit the explanation above, so there may be a second cause still hiding. Not guessing at it — flagged rather than papered over.
+
+---
+
 ## Patch 2026-07-20c — "False Alarm, Correctly Handled"
 
 An order rejection that looked like a returning bug turned out to be the safety system doing exactly its job, for twelve dollars and fifty cents.
