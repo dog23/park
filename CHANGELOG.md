@@ -6,6 +6,20 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ---
 
+## Patch 2026-07-20i — "The Order That Overstayed Its Welcome"
+
+Noticed the entry orders were hanging around far too long. When the strategy wants in on a trade, it places a limit order at a specific price and waits for the market to come to it — but if it never does, that order should give up and cancel so a stale price doesn't fill minutes later when the setup has gone. That "give up" timer had quietly ballooned to **22–26 minutes** on the tighter templates. A limit order resting live for nearly half an hour is asking to get filled at exactly the wrong moment.
+
+### ⚖️ Balance
+- **Entry orders now cancel after 2–6 minutes instead of 22–26.** The timer starts from a small base (2–6 min) and the auto-tuner is allowed to add extra patience on top when the evidence says orders are just missing the fill. That "extra" had been cranked all the way up to +20 minutes. Reset it to zero, so expiry drops straight back to the intended 2–6 minute floor.
+
+### 🛠️ Under the hood
+- **Capped how far the auto-tuner can push the timer back up.** The same automation that inflated it would happily do so again within a few daily runs — it was only limited by a ceiling of +24 minutes. Lowered that ceiling to +7, so even at full stretch the timer can't exceed ~9–13 minutes. The reset is now durable, not a one-day reprieve.
+
+*Dev note: two knobs, two files. The reset lives in the strategy (`EntryExpireExtraMinutes*` → 0) and autocompiles. The ceiling (`EXPIRE_MAX_TOTAL_EXTRA` 24 → 7) lives in the dashboard/automation code and applies on the auto-tuner's next run — it re-imports fresh each run, so no restart needed. Base timer itself is untouched: still 2–6 min scaled by template selectivity.*
+
+---
+
 ## Patch 2026-07-20h — "Sweeping Up the Trades That Never Said Goodbye"
 
 The verification suite was flagging failures, so I dug in — and two of them turned out to be worth fixing in very different ways. One was real data damage to clean up; the other was a health check counting wrong. Earlier today's fix stopped the strategy from *creating* trades that forget to record their exit — but it couldn't go back and fix the ones already broken. Thirteen trades from the last day and a half had closed without ever writing their "I exited here" marker, leaving **22,651 rows** of training data that quietly teach the model a lie: that positions never get out. This patch cleans those up, and separately teaches the "label drift" check to stop raising false alarms.
