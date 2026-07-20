@@ -22,7 +22,9 @@ The exit robot has been learning from trades whose endings were missing. Not cor
 
 ## Patch 2026-07-20d — "The Safety Catch Nobody Could Release"
 
-The real-money account has never placed a single trade in its entire existence. Today we found out why, and it was never going to fix itself.
+This robot had never once managed to place a trade on the real-money account. Today we found out why, and it was never going to fix itself.
+
+> **⚠️ CORRECTED.** An earlier version of this note said the *account* had never traded at all. That was wrong — the account has been trading since June 11th. What had never happened was **this robot** getting a trade filled on it. The mistake came from reading the robot's own trade log and assuming it covered the whole account.
 
 ### 🐛 Fixed
 - **A safety limit was silently blocking every trade on the live account.** The robot has an optional cap on how much margin it will tie up at once. To enforce it, it asks NinjaTrader "how much margin does one NQ contract cost?" — and NinjaTrader has no answer, for any contract, on any account. Rather than guess, the robot refuses to trade. It was refusing *every single time*, all day, every day, since the account was created.
@@ -38,7 +40,7 @@ The real-money account has never placed a single trade in its entire existence. 
   *Second dev note: worse, I flagged this exact margin setting as the likely culprit in my very first reply, then talked myself out of it because a settings tooltip appeared to show it switched off. The tooltip was for a different robot. A live error message beats a static screenshot; I overturned a correct conclusion using weaker evidence and cost us most of a session.*
 
 ### ⚠️ Known issues
-- **Still zero real fills.** The fix clears the blockage but proves nothing until an order actually goes through. Everything the entry logic knows about being filled, it learned from practice accounts.
+- ~~**Still zero real fills.**~~ **RESOLVED at 12:12 the same day.** The robot bought 1 YM at 52069, its protective stop was accepted 66 milliseconds later, and it stopped out at 52014 for **-$275** (-$279.34 after commission). A loss, but every step of the chain worked on real money for the first time: the entry cleared the margin gate, the stop armed without being rejected, and the trade logged correctly.
 - **The robot is reloading now and needs 20–40 minutes before it can trade.** Leave it alone until it says it's live.
 
 ---
@@ -98,7 +100,7 @@ The live-money account spent a whole session looking broken. It wasn't. It was l
   *Second dev note: an earlier run had actually succeeded at 08:00:24 and was switched off 37 seconds later, before anyone noticed. Its frozen timestamp then got read as the moment it crashed, when it was really the single minute it had ever been alive all day. A stale timestamp is the last moment something was working, not the moment it broke.*
 
 ### ⚠️ Known issues
-- **The live account has still never filled a single trade.** Not once, ever. Everything the entry logic knows about getting filled it learned from practice accounts, which fill differently from a real broker. The first real fill is worth watching closely rather than assuming it behaves.
+- ~~**The live account has still never filled a single trade.** Not once, ever.~~ **Wrong on two counts, both corrected later the same day.** The *account* had been trading since June 11th — that claim came from reading this robot's own trade log and mistaking it for the account's full history. What was true is that **this robot** had never been filled on it, and that was fixed at 12:12 (see Patch 2026-07-20d). Everything the entry logic knew about getting filled, it had learned from practice accounts.
 
 ---
 
