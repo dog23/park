@@ -6,6 +6,23 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ---
 
+## Patch 2026-07-20b — "Are You Actually On?"
+
+The live-money account spent a whole session looking broken. It wasn't. It was loading, and every time it got close to finishing, someone switched it off and started it over.
+
+### 🐛 Fixed
+- **The Output window now tells you whether a robot is actually trading.** Until today the only sign of life it printed was a line listing the settings it had picked — and that line appears *while it is still loading*, long before it can place a single order. A robot stuck loading and a robot trading normally produced identical output. There is now one line when it starts loading (**"LOADING HISTORY - not trading yet"**) and one line when it goes live (**"\*\*\* REALTIME - LIVE AND TRADING \*\*\*"**), each tagged with the account and, on the live line, how many minutes the load took.
+
+### 🧠 Under the hood
+- **The live account takes 19 to 37 minutes to start. That is normal, and it was the whole problem.** The real-money account connects through a different broker to the practice accounts, and it downloads its own price history rather than pulling it from NinjaTrader's servers. For four markets at 500-tick detail that genuinely takes tens of minutes. The practice accounts do it in seconds, which is why nobody had ever seen this before. Restarting the robot throws away all of that progress and begins again from nothing.
+  *Dev note: this is the honest bit. The robot was toggled off and on three times while I was diagnosing it — twice on my direct advice, at 18 and 23 minutes into a load that needed roughly 19. Each toggle reset the clock. It came right the moment it was left alone for one uninterrupted cycle, with nobody touching it. The timings are unambiguous in hindsight: 37 minutes to first life, then two runs killed at 23 and 18 minutes, then 18m41s to success when untouched. Three runs all ending at suspiciously similar durations should have prompted "how long does a cold start take?" long before "try turning it off and on again".*
+  *Second dev note: an earlier run had actually succeeded at 08:00:24 and was switched off 37 seconds later, before anyone noticed. Its frozen timestamp then got read as the moment it crashed, when it was really the single minute it had ever been alive all day. A stale timestamp is the last moment something was working, not the moment it broke.*
+
+### ⚠️ Known issues
+- **The live account has still never filled a single trade.** Not once, ever. Everything the entry logic knows about getting filled it learned from practice accounts, which fill differently from a real broker. The first real fill is worth watching closely rather than assuming it behaves.
+
+---
+
 ## Patch 2026-07-20 — "Dead Man's Switch"
 
 Two ES short trades filled into a fast spike and then ran with **no stop loss at all**. Three separate safety nets were supposed to catch that. All three were broken, in three different ways. This patch fixes all three and adds a fourth that checks every tick.
