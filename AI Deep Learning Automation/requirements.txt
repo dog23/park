@@ -1,0 +1,14 @@
+# Python 3.13. Install into a virtual environment:  pip install -r requirements.txt
+# Covers all three Python services (MLService :8765, MLService_Trend :8767, dashboard :8766).
+
+fastapi
+uvicorn[standard]
+pydantic
+numpy
+scikit-learn
+torch
+psutil
+
+# Optional — only needed for GPU stats in the hardware monitor. Safe to skip on a
+# CPU-only machine (the code degrades gracefully if it's absent).
+pynvml

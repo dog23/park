@@ -4,6 +4,8 @@ A production-grade, **self-operating algorithmic trading stack** I designed and 
 
 This is a curated, PII-redacted snapshot of that system. It is real code that runs real automation on live markets — not a demo.
 
+> **Running it?** See **[SETUP.md](SETUP.md)** — the Python services (the AI) install and run from this repo; the strategy itself needs the NinjaTrader 8 platform.
+
 > **Scope of this snapshot:** 32 source files, **~29,200 lines** — ~17.4K Python (ML services, dashboards, automation), ~10.2K C# (the two trading strategies), ~1.5K PowerShell/batch (the self-operating automation). All personal identifiers, hosts, credentials, and account numbers have been redacted; see [Redaction & privacy](#redaction--privacy).
 
 ---
