@@ -28,7 +28,7 @@ A temporal convolutional network (TCN) for multi-market trend breakouts across o
 
 ## Data-integrity verification suites
 
-Because the models train on the system's own trade history, corrupt training data is a real risk. Data integrity is handled by a continuously-running set of checks — 9–10 per model service, surfaced on the health dashboard with one-click ablation runs.
+Because the models train on the system's own trade history, corrupt training data is a real risk. Data integrity is handled by a continuously-running set of checks — 9–10 per model service, surfaced on the health dashboard with one-click ablation runs. For how to run these, read the verdicts, and retrain, see **[../MAINTENANCE.md](../MAINTENANCE.md)**.
 
 Representative checks (see [`MLService/verification.py`](MLService/verification.py) and [`MLService_Trend/verification.py`](MLService_Trend/verification.py)):
 
