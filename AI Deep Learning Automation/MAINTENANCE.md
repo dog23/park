@@ -60,6 +60,39 @@ Run them the same way (`/run-check` with the name above), or use **`POST /run-ab
 
 ---
 
+## Model states, sample sizes & gate thresholds
+
+The exact rules that decide whether a model is *warming up*, *recommending*, or *trading*. All values are the current code defaults (`ml_model.py`, `exit_model.py`, `service.py`).
+
+### Entry model
+
+**Sample sizes** (per model group = per instrument + data series):
+- **`MIN_SAMPLES_PER_GROUP = 150`** — a group won't train a model below this.
+- **`READY_MIN_LIVE = 200`** live samples — or **`READY_MIN_SHADOW = 200`** shadow samples with **`READY_MIN_DIRECTIONAL_SHADOW = 30`** long/short among them — before the model is considered "ready." Shadow samples train at weight **`SHADOW_SAMPLE_WEIGHT = 0.2`**.
+
+**States** (worst → best): `warming_up` → `do_not_use` → `overfitting` → `caution` → `good_to_use`. Only **`good_to_use`** models actually vote; anything else and the strategy falls back to rule-based signals.
+
+**Entry gate** (why a model lands in `caution` instead of `good_to_use`):
+- Validation accuracy must beat the class **base rate by ≥ `VAL_BASE_RATE_MARGIN = 0.05`** (5 points) — otherwise it's just predicting the majority class.
+- The validation slice must contain **≥ `MIN_VAL_DIRECTIONAL = 10`** long/short rows — enough directional evidence to trust a directional call.
+
+### Exit model
+
+**Load gate** — the model only loads and serves if, on held-out data:
+- **validation AUC ≥ `EXIT_MODEL_MIN_VAL_AUC = 0.55`**, **and**
+- **minority-class labels ≥ `EXIT_MODEL_MIN_MINORITY_LABELS = 100`**.
+
+Both are checked and the failing reason is logged. (Rationale in the code: an ES/3-Line-Break group once had 2 "exit" rows in 90,629 and scored AUC exactly 0.5000 — a percentage floor is the wrong guard, so an absolute minority-count floor is used.) There's also a smaller minority count/ratio floor before a group may **train** at all.
+
+### Phase gating (temalimit)
+
+The strategy escalates a model through phases; the jump to **"trading"** (phase 3) requires:
+- **`PHASE3_MIN_COMPLETED_TRADES = 150`** completed trades,
+- **validation AUC ≥ `PHASE3_MIN_VAL_AUC = 0.58`**,
+- **`PHASE3_MIN_WEEKS_REPRESENTED = 4`** distinct weeks of data (so it isn't trained on one unusual stretch).
+
+---
+
 ## Reading verdicts & remediating
 
 - **Green** — healthy, no action.
