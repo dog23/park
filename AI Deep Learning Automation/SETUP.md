@@ -86,6 +86,33 @@ The `.cs` files are **NinjaScript** and run **only inside NinjaTrader 8** — th
 
 ---
 
-## 3. Automation (optional, Windows)
+## 3. Scheduled tasks / watchdogs (optional, Windows)
 
-The `infrastructure/` scripts (watchdogs, backups, scheduled tasks) are **Windows-specific** and reference this machine's paths. They're included as a reference for how the stack keeps itself running unattended — not required to run the services, and they'd need their paths and `<ntfy-topic>` adjusted for another machine. See [infrastructure/README.md](infrastructure/README.md).
+The `infrastructure/` scripts keep the stack running unattended. They are **not required** to run the strategy or services — they're the "always-on" layer.
+
+> **Before you start:** every script hardcodes this machine's paths as `C:\Users\<user>\Documents\NinjaTrader 8\...`. **You must edit those paths** (and any `<ntfy-topic>`) to match your machine before running anything here. A few window-hiding launchers (e.g. the `*.vbs` wrappers the tasks call) are *not* published — run the `.ps1`/`.py` directly, or point the task at your own launcher.
+
+Each responsibility is a Windows Task Scheduler job. The full list is in [infrastructure/scheduled-tasks/TASKS.md](infrastructure/scheduled-tasks/TASKS.md). To register one, run an elevated (Administrator) command prompt. The pattern (from [`setup_watchdog_task.bat`](infrastructure/scheduled-tasks/setup_watchdog_task.bat)):
+
+```bat
+schtasks /create /tn MyServiceWatchdog ^
+  /tr "C:\path\to\python.exe C:\path\to\watchdog.py" ^
+  /sc minute /mo 1 /ru SYSTEM /rl HIGHEST /f
+```
+
+For tasks that must run **whether or not you're logged in** (no stored password), register them **S4U** instead — see [`upgrade_nt8_autocommit_to_s4u.ps1`](infrastructure/scheduled-tasks/upgrade_nt8_autocommit_to_s4u.ps1) for the `Register-ScheduledTask -Principal (New-ScheduledTaskPrincipal -LogonType S4U ...)` pattern. Point each task at the matching script in `infrastructure/watchdogs/`, `infrastructure/backups/`, or `infrastructure/hardware_monitor/`.
+
+## 4. Off-site backups with rclone (optional, Windows)
+
+[`backups/upload_ml_backup_to_mega.ps1`](infrastructure/backups/upload_ml_backup_to_mega.ps1) pushes the daily model-weight backups off-machine to cloud storage, keeping the newest three and alerting your phone if nothing has uploaded in ~26h. It uses [rclone](https://rclone.org/) with a remote the script calls `mega`.
+
+To set it up:
+
+1. **Install rclone** — `winget install Rclone.Rclone` (or download from [rclone.org/downloads](https://rclone.org/downloads/)).
+2. **Create the remote** — run `rclone config`, add a **new remote named `mega`**, choose your storage backend (the script name assumes [MEGA](https://rclone.org/mega/), but any rclone backend works if you keep the remote name `mega`), and sign into **your own** cloud account. Credentials are stored in your local `rclone.conf` — **never in this repo**.
+3. **Edit the script's variables** to your machine: `$rclone` (path to `rclone.exe`), `$backupRoot` (where local backups live), `$logPath`, and `$ntfyTopic` (your own [ntfy](https://ntfy.sh/) topic, currently `<ntfy-topic>`).
+4. **Run it** — `powershell -File upload_ml_backup_to_mega.ps1`. It runs `rclone copy` (incremental) into `mega:NinjaTrader8_Backups/<dated-folder>` and `rclone purge`s folders beyond the newest three. Schedule it daily via §3.
+
+The local snapshot it uploads is produced by [`backups/backup_ml_weights_daily.ps1`](infrastructure/backups/backup_ml_weights_daily.ps1) (model weights, task definitions, code history) — edit its paths the same way.
+
+See [infrastructure/README.md](infrastructure/README.md) for how these pieces fit together.
