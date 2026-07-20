@@ -6,6 +6,23 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ---
 
+## Patch 2026-07-20f — "A Stop With Nothing to Stop"
+
+When the machine came back after its restart, NinjaTrader tidied up the frozen positions on its own — and closed the stuck NQ short at a genuine **+$4,340**. But it left one thing behind: the stop-loss placed by hand earlier was still sitting in the market with no trade behind it, quietly following the price down. A stop like that isn't protecting anything — if price had ticked back up to it, it would have *opened a brand-new trade* out of nowhere. The safety alarm never noticed, because it was only ever taught to look for the opposite problem.
+
+### 🆕 New
+- **The safety monitor now watches for abandoned stops, not just unguarded trades.** Until today it asked one question every minute: "is there a position with no stop?" Now it also asks the mirror question: "is there a stop with no position?" — and if it finds one, it names the exact order to cancel and warns which direction it would accidentally open. It caught the real one on its very first run.
+
+### 🐛 Fixed
+- **The trade journal had the NQ trade recorded as a +$80 win. It was actually +$4,340.** During the freeze, a phantom "close" was logged that never really happened, so the journal booked a tiny scratch while the real position stayed open and was closed much later for a large profit. Corrected the entry to the real close, added a sibling trade the journal had missed entirely, and removed two duplicate "manual close" rows that were echoes of trades already recorded. (Backed up first; this is a simulated account, so it's bookkeeping accuracy, not real money.)
+
+### ✅ Reconciled
+- **Checked the live trade journal against NinjaTrader's own fill record for the whole day.** The **real-money account matched exactly.** All the drift was on the practice accounts, and every bit of it traces back to today's freeze-and-restart. A subtle trap worth flagging: the *totals* matched perfectly, because a phantom extra trade and a missing trade happened to cancel out — a reminder that "the numbers add up" is not the same as "the numbers are right."
+
+*Dev note: I also fumbled and un-fumbled a detail mid-repair — briefly "fixed" the file's line endings in the wrong direction before checking which way they actually went, then put it back. No harm done, but worth owning. The reconciliation itself I stand behind: the +$4,340 figure rests on the account provably staying short until the restart flattened it, confirmed three independent ways.*
+
+---
+
 ## Patch 2026-07-20e — "The Robot That Froze With Its Guard Down"
 
 A live short on the real-money account was left without a stop-loss for over half an hour, and the robot that was supposed to be watching it had quietly frozen solid. The alarm worked exactly as designed and caught it; the stop was re-placed by hand. This patch fixes one of the ways the robot could freeze — honestly, not the biggest one.
