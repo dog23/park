@@ -1,6 +1,6 @@
 # 1 · The AI — models that decide every trade
 
-This is the core of the system. Two FastAPI microservices serve machine-learning predictions to the live strategies, retrain themselves daily, and continuously verify that the data they learn from isn't lying to them.
+Two FastAPI microservices serve machine-learning predictions to the strategies, retrain daily, and verify the data they train on.
 
 - **`MLService/`** (port 8765) — entry model, exit model, verification suite, training pipeline, and the model-health dashboard. Serves `temalimit`.
 - **`MLService_Trend/`** (port 8767) — the trend TCN and its own verification + dashboard. Serves `TrendTcnStrategy`.
@@ -26,9 +26,9 @@ A temporal convolutional network (TCN) for multi-market trend breakouts across o
 
 - Files: [`trend_model.py`](MLService_Trend/trend_model.py), [`trend_utils.py`](MLService_Trend/trend_utils.py).
 
-## What keeps the AI honest — the verification suites
+## Data-integrity verification suites
 
-The single biggest risk in a system that trains on its own trade history is **training on subtly corrupt data**. So data integrity is a first-class, continuously-running service — 9–10 automated checks per model service, surfaced on the health dashboard with one-click ablation runs.
+Because the models train on the system's own trade history, corrupt training data is a real risk. Data integrity is handled by a continuously-running set of checks — 9–10 per model service, surfaced on the health dashboard with one-click ablation runs.
 
 Representative checks (see [`MLService/verification.py`](MLService/verification.py) and [`MLService_Trend/verification.py`](MLService_Trend/verification.py)):
 

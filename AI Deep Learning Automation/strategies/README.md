@@ -6,7 +6,7 @@ Two C# / NinjaScript strategies. They handle everything the model doesn't: detec
 
 The only strategy trading real money. A limit-order strategy on chart-pattern crossovers (TEMA / Bollinger Bands / VWAP) with momentum filters and a two-stage exit ladder.
 
-Highlights a reviewer might look for:
+Key features:
 
 - **Dual-model integration.** Calls the entry model for long/short/no-trade, and separately polls the exit model on open positions — each over localhost HTTP, each degrading to rule-based behavior if the service is unavailable.
 - **Template/profile rotation.** 40 configuration "templates" and 5 rotation modes (including P&L-ranked losers-first / winners-first rotation), letting the strategy vary its own parameters and learn which profiles work per instrument+series.

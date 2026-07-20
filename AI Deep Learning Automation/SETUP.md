@@ -1,15 +1,15 @@
 # Setup & install
 
-Honest summary first: **the Python services (the AI) run standalone from this repo; the trading strategy itself does not — it requires the NinjaTrader 8 desktop platform.** Here's what each part needs.
+The Python services run standalone from this repo. The trading strategy itself requires the NinjaTrader 8 desktop platform. What each part needs:
 
 | Component | Runs from this repo? | Needs |
 |-----------|:--:|-------|
-| `ml-services/MLService` (:8765) — entry/exit models | ✅ yes | Python 3.13 + `requirements.txt` |
-| `ml-services/MLService_Trend` (:8767) — trend TCN | ✅ yes | Python 3.13 + `requirements.txt` |
-| `dashboards/` (:8766) — live dashboard | ✅ yes | Python 3.13 (standard-library server) |
-| `strategies/*.cs` — the actual trading logic | ❌ no | **NinjaTrader 8** (proprietary, Windows) + companion files — see [The strategy](#the-strategy-ninjatrader-8) |
+| `ml-services/MLService` (:8765) — entry/exit models | Yes | Python 3.13 + `requirements.txt` |
+| `ml-services/MLService_Trend` (:8767) — trend TCN | Yes | Python 3.13 + `requirements.txt` |
+| `dashboards/` (:8766) — live dashboard | Yes | Python 3.13 (standard-library server) |
+| `strategies/*.cs` + `addons/*.cs` — the trading logic | No | NinjaTrader 8 (Windows) |
 
-> A fresh clone will **start** the services fine, but they have **no trained models and no data** until a running strategy feeds them trade logs. Standalone, you get live, healthy, *empty* services — useful to inspect the API, dashboards, and training/verification code, not to reproduce live predictions without the NinjaTrader half.
+> A fresh clone will start the services fine, but they have no trained models and no data until a running strategy feeds them trade logs. Standalone, the services run but are empty until the NinjaTrader half is connected.
 
 ---
 
@@ -68,11 +68,11 @@ Phone alerts (watchdogs, hardware monitor) post to an [ntfy](https://ntfy.sh/) t
 The `.cs` files are **NinjaScript** and run **only inside NinjaTrader 8** — they cannot be executed from a clone. To run `temalimit`:
 
 1. Install **[NinjaTrader 8](https://ninjatrader.com/)** (Windows) and connect a data/broker feed.
-2. Copy **all** the `.cs` files from [`strategies/`](strategies/) into `Documents\NinjaTrader 8\bin\Custom\Strategies\` — the two strategies **and** their six companion files (below).
+2. Copy the `.cs` files from [`strategies/`](strategies/) into `Documents\NinjaTrader 8\bin\Custom\Strategies\` (the two strategies and their six companion files), and the [`addons/`](addons/) files into `Documents\NinjaTrader 8\bin\Custom\AddOns\`.
 3. Start the Python services above (the strategy calls `http://localhost:8765` / `:8767` for predictions; it degrades to rule-based trading if they're down).
 4. In NinjaTrader: **New → NinjaScript Editor → Compile**, then add the strategy to a chart.
 
-**Companion files (included).** The strategies depend on six helper classes, all published here so the project **compiles as-is** — no other custom code is required (everything else is NinjaTrader's built-in indicators):
+**Companion files (included).** The strategies depend on six helper classes, all published here so the project compiles as-is — no other custom code is required (everything else is NinjaTrader's built-in indicators):
 
 | File | Role |
 |------|------|

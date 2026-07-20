@@ -1,6 +1,6 @@
 # 3 · Dashboards & observability
 
-How you watch an autonomous trading system without babysitting it. Three separate web dashboards, each with a single job — deliberately not merged, so a bug in one view can't take down the others.
+Three separate web dashboards, each with a single job — deliberately not merged, so a bug in one view can't take down the others.
 
 | Port | Dashboard | Shows |
 |------|-----------|-------|
@@ -17,4 +17,4 @@ Included here:
 
 - **Read-only over shared files.** Dashboards never call into the trading process; they read the same status/log files the strategies write. A dashboard crash can't touch live trading.
 - **Self-restarting.** Each dashboard exposes a `/restart` route and is backed by its own watchdog task (see [../infrastructure/](../infrastructure/)), so a hung view recovers on its own.
-- **No build step, no framework.** Vanilla JS/HTML/CSS/SVG served from Python — one less toolchain to break at 3 a.m.
+- **No build step, no framework.** Vanilla JS/HTML/CSS/SVG served from Python.

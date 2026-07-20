@@ -1,6 +1,6 @@
 # 4 · Self-operating automation
 
-This is what turns the AI and the strategies into a system that **runs itself** — unattended, through logout, reboot, and power loss, with a phone alert only when a human is actually needed. It's the layer I'm proudest of: the models are the brains, but this is what lets them operate without me.
+The automation that keeps the AI and the strategies running unattended — through logout, reboot, and power loss — with a phone alert only when a human is needed.
 
 Everything here runs as **Windows Task Scheduler** jobs, registered **S4U** (run whether or not the user is logged on, no stored password) and **battery-aware** so they keep going on a laptop. Full inventory: **[scheduled-tasks/TASKS.md](scheduled-tasks/TASKS.md)**.
 
@@ -11,7 +11,7 @@ Every critical process has something watching it, and the watchdogs are themselv
 - **[`dashboard_watchdog.py`](watchdogs/dashboard_watchdog.py)**, **[`trend_watchdog.ps1`](watchdogs/trend_watchdog.ps1)**, and the ML-service watchdog — restart any dead model service or dashboard, and reap orphaned training workers so a restart doesn't leave zombie processes hogging cores.
 - **[`ninjatrader_process_watchdog.ps1`](watchdogs/ninjatrader_process_watchdog.ps1)** / **[`watchdog_ninjatrader_watcher.ps1`](watchdogs/watchdog_ninjatrader_watcher.ps1)** — detect the trading platform crashing *or freezing* and bring it back.
 - **[`circuit_breaker_watchdog.py`](watchdogs/circuit_breaker_watchdog.py)** — a **daily-loss circuit breaker**: past a threshold, it stops the bleeding and alerts.
-- **[`naked_position_watchdog.py`](watchdogs/naked_position_watchdog.py)** — catches an **unhedged live position** (an entry filled but its protective stop missing) and raises an urgent alert — the single scariest failure mode in automated trading.
+- **[`naked_position_watchdog.py`](watchdogs/naked_position_watchdog.py)** — catches an **unhedged live position** (an entry filled but its protective stop missing) and raises an urgent alert.
 
 ## Off-site disaster recovery — `backups/`
 
@@ -25,7 +25,6 @@ Designed around one question: *if this laptop died right now, could I rebuild ev
 
 - **[`hardware_monitor/hw_monitor.py`](hardware_monitor/hw_monitor.py)** — watches CPU/GPU/thermals/disk on the trading box and pushes phone alerts on trouble; zero-config, never crashes the thing it's monitoring.
 - **[`scheduled-tasks/`](scheduled-tasks/)** — the task-registration scripts (`setup_watchdog_task.bat`, the S4U upgrade helper, `ml_daily.ps1`), log housekeeping (`trace_log_cleanup.ps1`), and this repo's own **auto-push** pipeline (`autopush.ps1` + `watch_and_autopush.ps1`), which is guarded by a local PII pre-push hook so nothing personal ever leaves the machine.
-- **[`Fetch-GexLevels.ps1`](Fetch-GexLevels.ps1)** — a data-fetch job pulling options-positioning levels from a market-data API (key read from an environment variable, never hardcoded).
 
 ## Alerting
 
