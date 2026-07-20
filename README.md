@@ -2,7 +2,7 @@
 
 Public home for my NinjaTrader 8 work: a redacted snapshot of the trading system, plus the plain-English changelog and design diagrams for the trading stack.
 
-## → [AI-driven trading automation](trading-stack/)
+## → [AI-driven trading automation](AI%20Deep%20Learning%20Automation/)
 
 A curated, PII-redacted snapshot of a self-operating algorithmic trading system I designed and built solo — **~29,200 lines** across ML services, two live NinjaTrader strategies, dashboards, and the automation that runs the whole thing unattended:
 
@@ -11,7 +11,7 @@ A curated, PII-redacted snapshot of a self-operating algorithmic trading system 
 - **Dashboards** for model health, live trades, and trend predictions.
 - **Self-operating automation** — a watchdog mesh, circuit breakers, off-site disaster-recovery backups, and phone alerts, all as scheduled tasks that survive logout and reboot.
 
-**Start at → [the overview](trading-stack/README.md).**
+**Start at → [the overview](AI%20Deep%20Learning%20Automation/README.md).**
 
 ## Also here
 
