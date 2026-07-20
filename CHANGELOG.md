@@ -64,7 +64,28 @@ An order rejection that looked like a returning bug turned out to be the safety 
 
 ---
 
+## Patch 2026-07-20e — "Retraction"
+
+Patch 2026-07-20b below told you the live account takes 20–40 minutes to start up. That was wrong. It starts instantly.
+
+### 🐛 Fixed
+- **Nothing in the software.** This patch corrects a wrong explanation that was published in an earlier patch note today, and in the technical guide. The note stays visible rather than being quietly deleted, because a wrong reason left in the record is worse than an embarrassing one.
+
+### 🧠 Under the hood
+- **The live account reaches "trading" in about one second, not 20–40 minutes.** After today's margin fix the robot was switched off and on, and it announced itself live in the same second. Same account, same broker connection, same four markets. The "it's downloading its own price history and that takes tens of minutes" story does not survive that.
+  *Dev note: the earlier claim was built on a pattern — three restarts that each ended after 18–37 minutes — and a plausible mechanism, the broker connection genuinely does fetch its own history. Both halves were real. The conclusion joining them was invented, and it held up for hours because nobody had made the robot say when it went live. The moment it could say so, it said "0.0 min" and the theory collapsed.*
+- **The startup timer is accurate and was never broken.** It measures from the instant you hit Enable. I briefly suspected it of lying and was about to "fix" a correct number — that would have destroyed the one measurement that disproved my own theory.
+
+### ⚠️ Known issues
+- **There is still a real, unexplained delay** between the robot announcing it is live and it beginning to write status files — about 2 minutes today, about 18 minutes earlier this morning. That gap is genuine and undiagnosed. It happens *after* startup finishes, so it is not a loading problem. **No theory is offered here on purpose.**
+- **The advice "wait 40 minutes before assuming it's broken" is withdrawn.** Going live is instant. If it hasn't said `*** REALTIME - LIVE AND TRADING ***` within seconds, something genuinely is wrong.
+- Switching the robot off and on repeatedly is still a bad idea — that part of the earlier note stands, just not the reasoning attached to it.
+
+---
+
 ## Patch 2026-07-20b — "Are You Actually On?"
+
+> **⚠️ CORRECTED — see Patch 2026-07-20e above.** The 19–37 minute startup time claimed in this patch is **wrong**; the live account reaches trading in about one second. The observation that it was repeatedly switched off mid-diagnosis is accurate, but the explanation below is not. Left in place deliberately rather than rewritten.
 
 The live-money account spent a whole session looking broken. It wasn't. It was loading, and every time it got close to finishing, someone switched it off and started it over.
 
