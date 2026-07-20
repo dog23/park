@@ -26,6 +26,23 @@ A temporal convolutional network (TCN) for multi-market trend breakouts across o
 
 - Files: [`trend_model.py`](MLService_Trend/trend_model.py), [`trend_utils.py`](MLService_Trend/trend_utils.py).
 
+## Architecture & how the models learn
+
+All three are small **PyTorch** networks, trained **per instrument + data series** on the strategies' own logged trades — each setup's features are the input, its realized outcome is the label. Training runs daily on CPU, with a validation split and best-validation-loss checkpointing.
+
+| Model | Network type | Shape |
+|-------|-------------|-------|
+| Entry (`TemporalCnn`) | 1-D temporal **CNN** | 3× `Conv1d` (48→64→64, kernels 5/5/3) with BatchNorm / ReLU / Dropout 0.1 → linear head → 3 classes (long / short / no-trade) |
+| Exit (`TradeExitModel`) | **LSTM + Transformer** sequence model | 2-layer LSTM (hidden 48) + a 1-layer Transformer encoder over the trade's last ≤128 bars, plus a static-context branch → a single hold/exit logit |
+| Trend (`TrendTcn`) | **TCN** — dilated causal CNN | residual temporal blocks, dilations 1/2/4/8, kernel 3, 32 channels → linear head → 3 classes |
+
+**How training works:**
+- **Loss** — cross-entropy for the 3-class entry and trend models (trend adds class weights to handle label imbalance); binary cross-entropy (`BCEWithLogitsLoss`) for the exit model.
+- **Optimizer** — AdamW, weight decay `1e-4`; ~8 epochs (entry) / 30 (trend), keeping the best-validation checkpoint so an overfit late epoch is discarded.
+- **Sample weighting** — shadow-traded samples train at weight **0.2**, so they inform the model without outvoting real live trades.
+- **Sequences (exit)** — variable-length trades are packed/padded, inputs normalized by stored mean/std, and a little noise is added to sequences during training for robustness.
+- Features are computed in [`feature_utils.py`](MLService/feature_utils.py) / [`trend_utils.py`](MLService_Trend/trend_utils.py).
+
 ## Data-integrity verification suites
 
 Because the models train on the system's own trade history, corrupt training data is a real risk. Data integrity is handled by a continuously-running set of checks — 9–10 per model service, surfaced on the health dashboard with one-click ablation runs. For how to run these, read the verdicts, and retrain, see **[../MAINTENANCE.md](../MAINTENANCE.md)**.
