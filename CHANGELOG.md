@@ -6,6 +6,21 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ---
 
+## Patch 2026-07-20e — "The Robot That Froze With Its Guard Down"
+
+A live short on the real-money account was left without a stop-loss for over half an hour, and the robot that was supposed to be watching it had quietly frozen solid. The alarm worked exactly as designed and caught it; the stop was re-placed by hand. This patch fixes one of the ways the robot could freeze — honestly, not the biggest one.
+
+### 🐛 Fixed
+- **A slow reply from the learning server could freeze the robot at the worst possible moment.** When a trade closes, the robot's very first act is to mail off a note to the learning system describing how it went. That note was being sent the *blocking* way — the robot stood at the mailbox and waited for a reply before doing anything else, including managing its other positions. Every other note of this kind is already sent fire-and-forget; this one was the lone straggler. It now sends the same way, so a sluggish learning server can never again freeze the robot while it's holding a live position.
+
+### ⚠️ Known issues
+- **This is not the whole story, and I want to be straight about that.** The mailbox wait could only ever stall the robot for about two and a half seconds — but the freeze that triggered this whole investigation lasted *twenty-three minutes*. The real culprit is almost certainly something else: when you flip the robot off and on again quickly while it's holding trades, two copies of it briefly exist at once and fight over the same handful of shared files and locks. That fight is the likely source of the long freeze, and it is **not** fixed here — pinning it down safely needs a controlled test off-hours, not a guess against a live account.
+- **So the real fix, for now, is a habit:** don't rapidly toggle the robot (or its per-market on/off switches) while it's holding open positions. Today it got flipped eight times in forty-four minutes mid-position. Flatten first, or expect a window where a trade is briefly unmanaged.
+
+*Dev note: the tidy-looking version of this story — "the stop was placed on the wrong side and instantly triggered" — is wrong, and I checked before believing it. All three places the robot sets a stop already refuse to put it on the wrong side of the market. The stop that filled was a legitimate profit-lock trail carried over from the previous copy of the robot; it filled fairly. The damage was that the new copy had already frozen and wasn't there to notice or replace it — and then its books desynced from the account, so it thought it was flat while a live short sat open. Fixing the mailbox-wait is real hardening and worth doing, but I'm labelling it hardening, not a cure.*
+
+---
+
 ## Patch 2026-07-20d — "The Exits That Never Got Written Down"
 
 The exit robot has been learning from trades whose endings were missing. Not corrupted — missing. Yesterday's fix caught most of them; today's found the rest, and corrected a wrong diagnosis of my own along the way.
