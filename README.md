@@ -1,8 +1,8 @@
 # Park
 
-Public home for my NinjaTrader 8 work: a redacted **portfolio / work sample**, plus the plain-English changelog and design diagrams for the trading stack.
+Public home for my NinjaTrader 8 work: a redacted snapshot of the trading system, plus the plain-English changelog and design diagrams for the trading stack.
 
-## → [portfolio/](portfolio/) — AI-driven trading automation *(work sample)*
+## → [AI-driven trading automation](portfolio/)
 
 A curated, PII-redacted snapshot of a self-operating algorithmic trading system I designed and built solo — **~29,200 lines** across ML services, two live NinjaTrader strategies, dashboards, and the automation that runs the whole thing unattended:
 
