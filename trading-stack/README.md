@@ -1,10 +1,10 @@
-# AI-Driven Trading Automation — Work Sample
+# AI-Driven Trading Automation
 
 A production-grade, **self-operating algorithmic trading stack** I designed and built end-to-end, solo. Two live [NinjaTrader 8](https://ninjatrader.com/) strategies make their **entry and exit decisions with machine-learning models that I train, serve, and continuously verify myself** — wrapped in an automation layer that retrains the models, monitors every moving part, backs itself up off-site, and self-heals with no human in the loop.
 
-This folder is a curated, PII-redacted snapshot of that system, assembled as a work sample. It is real code that runs real automation on live markets — not a demo.
+This is a curated, PII-redacted snapshot of that system. It is real code that runs real automation on live markets — not a demo.
 
-> **Scope of this sample:** 32 source files, **~29,200 lines** — ~17.4K Python (ML services, dashboards, automation), ~10.2K C# (the two trading strategies), ~1.5K PowerShell/batch (the self-operating automation). All personal identifiers, hosts, credentials, and account numbers have been redacted; see [Redaction & privacy](#redaction--privacy).
+> **Scope of this snapshot:** 32 source files, **~29,200 lines** — ~17.4K Python (ML services, dashboards, automation), ~10.2K C# (the two trading strategies), ~1.5K PowerShell/batch (the self-operating automation). All personal identifiers, hosts, credentials, and account numbers have been redacted; see [Redaction & privacy](#redaction--privacy).
 
 ---
 
@@ -80,6 +80,6 @@ This is a public snapshot, so every personal identifier was mechanically removed
 - Loopback addresses normalized to `localhost`
 - API keys were **already** kept out of source (referenced only through environment variables) — nothing to redact
 
-A local `git` pre-push hook independently scans every outgoing change for emails, phone numbers, SSN-shaped strings, IP addresses, home paths, and account-number-shaped digit runs, and blocks the push if it finds any. No credentials, keys, or personal data appear anywhere in this sample.
+A local `git` pre-push hook independently scans every outgoing change for emails, phone numbers, SSN-shaped strings, IP addresses, home paths, and account-number-shaped digit runs, and blocks the push if it finds any. No credentials, keys, or personal data appear anywhere in this snapshot.
 
-*Built and maintained solo. Shared here as a work sample; not investment advice, and no trading-performance claims are made or implied — the point is the engineering.*
+*Built and maintained solo. Shared here as a redacted snapshot; not investment advice, and no trading-performance claims are made or implied — the point is the engineering.*

@@ -29,7 +29,7 @@ Designed around one question: *if this laptop died right now, could I rebuild ev
 
 ## Alerting
 
-All of it reports to a single phone via **[ntfy](https://ntfy.sh/)** push — no mobile app to build, no inbox to watch. Routine success is silent; only things that need a human make noise. Alert topics are redacted to `<ntfy-topic>` in this sample.
+All of it reports to a single phone via **[ntfy](https://ntfy.sh/)** push — no mobile app to build, no inbox to watch. Routine success is silent; only things that need a human make noise. Alert topics are redacted to `<ntfy-topic>` in this snapshot.
 
 ## Principles
 
