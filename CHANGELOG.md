@@ -6,6 +6,27 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ---
 
+## Patch 2026-07-20c — "False Alarm, Correctly Handled"
+
+An order rejection that looked like a returning bug turned out to be the safety system doing exactly its job, for twelve dollars and fifty cents.
+
+### 🐛 Fixed
+- Nothing. **This patch changes no code.** It is written up because "we investigated and found nothing wrong" is worth recording just as much as a fix — otherwise the same alarm gets re-investigated from scratch next month.
+
+### 🧠 Under the hood
+- **Five "stop order rejected" errors today were all the system working correctly.** When a robot buys, it immediately places a protective stop below its entry price. Five times today that stop was refused by NinjaTrader because the price had *already fallen past it* in the fraction of a second between buying and placing the stop. The robot noticed, closed the position instantly, and moved on. The clearest case cost **$12.50**.
+- **Every one of the five happened on a "reversal chart" robot** (Renko, Point & Figure, Heiken Ashi). That looked like a smoking gun and isn't. Those chart types only draw a new bar when the price moves a lot, so those robots almost exclusively buy *during* fast moves — which is precisely when the price can run past your stop before you finish placing it. They aren't more broken, they just spend all their time in the weather where this happens.
+  *Dev note: I had a tidy theory that these chart types were feeding the robot a stale price, and it was wrong. The arithmetic killed it: if the robot had been reading the stale price, the specific safety check that fired could not physically have fired — the numbers only work if it was reading the correct, live price all along. Worth stating plainly because the theory fit the pattern beautifully and would have made a very convincing changelog entry for a bug that does not exist.*
+- **This was not the order-direction bug from July 17th.** That one could only ever break trades in one direction. Today's five broke in *both* directions, which rules it out. The note not to "fix" this by flipping the direction back stands.
+
+### ✅ Confirmed working
+- **July 19th's hardening held.** Previously an error like this switched the whole robot off, and it stayed off until someone noticed and restarted it. Today all five errors were absorbed with no robot disabled — SimRenko kept trading all four of its markets straight through. That change is doing real work; leave it alone.
+
+### ⚠️ Known issues
+- **A trade that buys into a fast drop will still cost you one small immediate loss.** This is the intended outcome rather than a defect: a stop that the price has already passed cannot legally be placed, so the only safe move is to close out. The alternative — quietly holding a position with no protection — is the thing that caused the July 20th "Dead Man's Switch" incident below.
+
+---
+
 ## Patch 2026-07-20b — "Are You Actually On?"
 
 The live-money account spent a whole session looking broken. It wasn't. It was loading, and every time it got close to finishing, someone switched it off and started it over.
