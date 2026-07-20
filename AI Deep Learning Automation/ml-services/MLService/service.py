@@ -3794,7 +3794,7 @@ def render_indicator_curves_section() -> str:
           pl.setAttribute('points', pts.join(' ')); pl.setAttribute('fill', 'none');
           pl.setAttribute('stroke', color); pl.setAttribute('stroke-width', width);
           pl.setAttribute('stroke-opacity', opacity); pl.setAttribute('stroke-linejoin', 'round');
-          if (dashed) pl.setAttribute('stroke-da<user>ay', '3,3');
+          if (dashed) pl.setAttribute('stroke-dasharray', '3,3');
           return pl;
         }}
 
@@ -3884,7 +3884,7 @@ def render_indicator_curves_section() -> str:
           selRect = document.createElementNS(NS, 'rect');
           selRect.setAttribute('fill', 'rgba(124,92,255,0.15)');
           selRect.setAttribute('stroke', 'var(--accent)'); selRect.setAttribute('stroke-width', '1');
-          selRect.setAttribute('stroke-da<user>ay', '4,3');
+          selRect.setAttribute('stroke-dasharray', '4,3');
           selRect.setAttribute('x', p.x); selRect.setAttribute('y', p.y);
           selRect.setAttribute('width', 0); selRect.setAttribute('height', 0);
           svg.appendChild(selRect);
