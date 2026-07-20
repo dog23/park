@@ -1,0 +1,127 @@
+<svg viewBox="0 0 1000 900" xmlns="http://www.w3.org/2000/svg" role="img">
+<title>temalimit.cs risk sizing: two-tier formula (Templates 1-40)</title>
+<desc>Templates 1-19 use one shared formula for all four instruments (UniversalBase times a per-template curve times a per-instrument multiplier). Templates 20-40 split into two different formulas: NQ, RTY, and YM continue on a smooth straight line up to a target dollar amount, while ES steps up by exactly one $12.5 tick per template because its tick size is too coarse for a smooth line to avoid repeating values.</desc>
+
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#556070"/>
+  </marker>
+  <marker id="arrowAccent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#3b82f6"/>
+  </marker>
+  <marker id="arrowWarn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="#d97706"/>
+  </marker>
+</defs>
+
+<style>
+  text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #1a1f27; }
+  .box { fill: #f4f6f8; stroke: #6b7684; stroke-width: 1; }
+  .boxTitle { font-size: 15px; font-weight: 600; }
+  .boxSub { font-size: 12px; fill: #4b5563; }
+  .boxMono { font-size: 11px; fill: #374151; font-family: Consolas, "Courier New", monospace; }
+  .edgeLabel { font-size: 12px; fill: #4b5563; }
+  .edge { fill: none; stroke: #556070; stroke-width: 1.5; }
+  .edgeAccent { fill: none; stroke: #3b82f6; stroke-width: 1.5; }
+  .sectionLabel { font-size: 13px; font-weight: 600; fill: #4b5563; }
+  .warnLabel { font-size: 12px; font-weight: 600; fill: #b45309; }
+  th, .th { font-size: 11px; font-weight: 600; fill: #1a1f27; }
+  .td { font-size: 11px; fill: #374151; }
+</style>
+
+<rect x="0" y="0" width="1000" height="900" fill="#ffffff"/>
+
+<!-- Start: UniversalBase -->
+<rect x="400" y="16" width="200" height="56" rx="8" class="box"/>
+<text x="500" y="40" text-anchor="middle" class="boxTitle">UniversalBase</text>
+<text x="500" y="58" text-anchor="middle" class="boxSub">3000 (one shared number)</text>
+
+<path class="edge" d="M500,72 L500,104" marker-end="url(#arrow)"/>
+
+<!-- Tier 1 box -->
+<rect x="230" y="104" width="540" height="118" rx="8" class="box" stroke="#3b82f6" stroke-width="1.5"/>
+<text x="500" y="128" text-anchor="middle" class="boxTitle">Tier 1 — Templates 1 to 19 (same formula, all 4 instruments)</text>
+<text x="500" y="148" text-anchor="middle" class="boxMono">value(t) = UniversalBase x TemplateCurve(t) x PerInstrumentMultiplier</text>
+<text x="260" y="172" class="td">NQ  mult 0.166667 / 0.125</text>
+<text x="260" y="188" class="td">ES  mult 0.104167 / 0.10</text>
+<text x="580" y="172" class="td">RTY mult 0.066667 / 0.05</text>
+<text x="580" y="188" class="td">YM  mult 0.033333 / 0.025</text>
+<text x="500" y="210" text-anchor="middle" class="boxSub">(Risk1R multiplier / LadderDaily multiplier)</text>
+
+<path class="edge" d="M500,222 L500,254" marker-end="url(#arrow)"/>
+
+<!-- T19 hub -->
+<rect x="320" y="254" width="360" height="90" rx="8" class="box" stroke="#3b82f6" stroke-width="1.5"/>
+<text x="500" y="276" text-anchor="middle" class="boxTitle">Template 19 values (Tier 1 result)</text>
+<text x="340" y="298" class="th">Instrument</text>
+<text x="470" y="298" class="th">Risk1R</text>
+<text x="580" y="298" class="th">LadderDaily</text>
+<text x="340" y="314" class="td">NQ $875 · ES $550 · RTY $350</text>
+<text x="340" y="330" class="td">YM $175   (ladder: $656.30 / $525 / $262.50 / $131.30)</text>
+
+<!-- Split into two branches -->
+<path class="edge" d="M400,344 C260,344 260,400 260,432" marker-end="url(#arrow)"/>
+<text x="120" y="390" class="sectionLabel">NQ, RTY, YM</text>
+
+<path class="edgeAccent" d="M600,344 C760,344 760,400 760,432" marker-end="url(#arrowAccent)"/>
+<text x="700" y="390" class="sectionLabel">ES only</text>
+
+<!-- Left branch: straight line -->
+<rect x="120" y="432" width="280" height="100" rx="8" class="box"/>
+<text x="260" y="454" text-anchor="middle" class="boxTitle">Tier 2 — straight line</text>
+<text x="260" y="472" text-anchor="middle" class="boxMono">value(t) = line from T19 to T40 target</text>
+<text x="140" y="494" class="td">NQ  target $1000 / $800</text>
+<text x="140" y="510" class="td">RTY target $500 / $375</text>
+<text x="140" y="524" class="td">YM  target $400 / $300</text>
+
+<path class="edge" d="M260,532 L260,564" marker-end="url(#arrow)"/>
+
+<rect x="120" y="564" width="280" height="56" rx="8" class="box"/>
+<text x="260" y="586" text-anchor="middle" class="boxTitle">Template 20 (min)</text>
+<text x="260" y="604" text-anchor="middle" class="boxSub">NQ $881 · RTY $357.10 · YM $185.70</text>
+
+<path class="edge" d="M260,620 L260,652" marker-end="url(#arrow)"/>
+
+<rect x="120" y="652" width="280" height="56" rx="8" class="box"/>
+<text x="260" y="674" text-anchor="middle" class="boxTitle">Template 40 (max, on target)</text>
+<text x="260" y="692" text-anchor="middle" class="boxSub">NQ $1000 · RTY $500 · YM $400</text>
+
+<!-- Right branch: ES tick stepper -->
+<rect x="620" y="432" width="280" height="100" rx="8" class="box" stroke="#3b82f6"/>
+<text x="760" y="454" text-anchor="middle" class="boxTitle">Tier 2 — tick stepper (ES)</text>
+<text x="760" y="472" text-anchor="middle" class="boxMono">value(t) = T19 + (t-19) x ticks x $12.5</text>
+<text x="640" y="494" class="td">ticks per template = 1 (default)</text>
+<text x="640" y="510" class="td">no smooth curve — every step is</text>
+<text x="640" y="524" class="td">exactly one real ES market tick</text>
+
+<path class="edgeAccent" d="M760,532 L760,564" marker-end="url(#arrowAccent)"/>
+
+<rect x="620" y="564" width="280" height="56" rx="8" class="box" stroke="#3b82f6"/>
+<text x="760" y="586" text-anchor="middle" class="boxTitle">Template 20 (min)</text>
+<text x="760" y="604" text-anchor="middle" class="boxSub">Risk1R $562.50 · LadderDaily $537.50</text>
+
+<path class="edgeAccent" d="M760,620 L760,652" marker-end="url(#arrowAccent)"/>
+
+<rect x="620" y="652" width="280" height="56" rx="8" class="box" stroke="#3b82f6"/>
+<text x="760" y="674" text-anchor="middle" class="boxTitle">Template 40 (max, closest tick)</text>
+<text x="760" y="692" text-anchor="middle" class="boxSub">Risk1R $812.50 · LadderDaily $787.50</text>
+
+<!-- Warning note about why ES can't be flat/fractional -->
+<path class="edgeWarn" d="M760,708 L760,730" stroke="#d97706" stroke-width="1.5" fill="none" marker-end="url(#arrowWarn)"/>
+<text x="760" y="750" text-anchor="middle" class="warnLabel">ticks/template must be a whole number ≥ 1</text>
+<text x="760" y="766" text-anchor="middle" class="boxSub">0 = every template repeats · 0.5 = every other template repeats</text>
+
+<!-- Bottom summary table -->
+<rect x="180" y="796" width="640" height="86" rx="8" class="box"/>
+<text x="500" y="818" text-anchor="middle" class="boxTitle">Template 40 — final values (Risk1R / LadderDaily)</text>
+<text x="220" y="842" class="td">NQ: $1000 / $800</text>
+<text x="220" y="860" class="td">ES: $812.50 / $787.50</text>
+<text x="560" y="842" class="td">RTY: $500 / $375</text>
+<text x="560" y="860" class="td">YM: $400 / $300</text>
+
+<!-- Legend -->
+<rect x="230" y="878" width="14" height="14" fill="none" stroke="#6b7684"/>
+<text x="252" y="889" class="edgeLabel">shared / straight-line path</text>
+<rect x="470" y="878" width="14" height="14" fill="none" stroke="#3b82f6"/>
+<text x="492" y="889" class="edgeLabel">ES-only tick-stepper path (2026-07-16)</text>
+</svg>
