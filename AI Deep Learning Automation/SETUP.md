@@ -68,11 +68,21 @@ Phone alerts (watchdogs, hardware monitor) post to an [ntfy](https://ntfy.sh/) t
 The `.cs` files are **NinjaScript** and run **only inside NinjaTrader 8** — they cannot be executed from a clone. To run `temalimit`:
 
 1. Install **[NinjaTrader 8](https://ninjatrader.com/)** (Windows) and connect a data/broker feed.
-2. Copy the strategy `.cs` files into `Documents\NinjaTrader 8\bin\Custom\Strategies\`.
+2. Copy **all** the `.cs` files from [`strategies/`](strategies/) into `Documents\NinjaTrader 8\bin\Custom\Strategies\` — the two strategies **and** their six companion files (below).
 3. Start the Python services above (the strategy calls `http://localhost:8765` / `:8767` for predictions; it degrades to rule-based trading if they're down).
 4. In NinjaTrader: **New → NinjaScript Editor → Compile**, then add the strategy to a chart.
 
-> ⚠️ **Companion files not included.** `temalimit.cs` depends on several helper classes that are **not published in this snapshot**, so it will **not compile as-is**: `OpenTradeStatusExporter`, `PendingTradeStatusExporter`, `PullbackStateExporter`, `ActiveStopVisualStrategyBase`, `ManualExitCommand`, `ManualCancelCommand`. These write the status/log files the dashboards and ML services read. Without them the project is a **reference/reading** sample, not a compile-and-run one. (If you want the strategy to actually compile, those files would need to be added too — a decision about publishing more of the source.)
+**Companion files (included).** The strategies depend on six helper classes, all published here so the project **compiles as-is** — no other custom code is required (everything else is NinjaTrader's built-in indicators):
+
+| File | Role |
+|------|------|
+| `ActiveStopVisualStrategyBase.cs` | Base class `temalimit` extends (draws stop lines) |
+| `OpenTradeStatusExporter.cs` | Writes the open-trade status files the dashboards/ML read (used by both strategies) |
+| `PendingTradeStatusExporter.cs` | Writes pending/limit-order status |
+| `PullbackStateExporter.cs` | Writes pullback-evidence state |
+| `ManualExitCommand.cs` / `ManualCancelCommand.cs` | Chart buttons for manual exit/cancel |
+
+> These exporters write the TSV/log files the Python services consume — so with the strategy running in NT8 and the services running from this repo, the full AI loop is connected. Redacted the same way as everything else (`<user>`, `<account>`, etc.).
 
 ---
 

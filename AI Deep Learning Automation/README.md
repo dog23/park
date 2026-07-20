@@ -6,7 +6,7 @@ This is a curated, PII-redacted snapshot of that system. It is real code that ru
 
 > **Running it?** See **[SETUP.md](SETUP.md)** — the Python services (the AI) install and run from this repo; the strategy itself needs the NinjaTrader 8 platform.
 
-> **Scope of this snapshot:** 32 source files, **~29,200 lines** — ~17.4K Python (ML services, dashboards, automation), ~10.2K C# (the two trading strategies), ~1.5K PowerShell/batch (the self-operating automation). All personal identifiers, hosts, credentials, and account numbers have been redacted; see [Redaction & privacy](#redaction--privacy).
+> **Scope of this snapshot:** 38 source files, **~29,900 lines** — ~17.4K Python (ML services, dashboards, automation), ~10.9K C# (the two trading strategies + their compile dependencies), ~1.5K PowerShell/batch (the self-operating automation). All personal identifiers, hosts, credentials, and account numbers have been redacted; see [Redaction & privacy](#redaction--privacy).
 
 ---
 
