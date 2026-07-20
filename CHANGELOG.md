@@ -6,6 +6,27 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ---
 
+## Patch 2026-07-20 — "Dead Man's Switch"
+
+Two ES short trades filled into a fast spike and then ran with **no stop loss at all**. Three separate safety nets were supposed to catch that. All three were broken, in three different ways. This patch fixes all three and adds a fourth that checks every tick.
+
+### 🐛 Fixed
+- **A rejected stop no longer leaves a trade running unprotected.** When the strategy's protective stop was refused by the broker, it tried to close the trade immediately — but it was asking a fraction of a second too early, before the trade had officially been recorded, and the request was quietly thrown away. The log shows the refusal and then simply nothing. The close request is now queued and re-issued a tick later, once the trade definitely exists.
+  *Dev note: the timing gap is tiny and completely invisible without the log — the refusal arrives at 00:27:13.127 and the trade registers at 00:27:13.129, two thousandths of a second later. The old code looked correct in every reading; it just never ran. This is the one that turned "a stop got refused" into "a trade ran for 20 minutes with nothing protecting it."*
+- **The "the market already blew past our stop" check now actually runs.** It was written to compare the intended stop against the current price — but it ran *after* the stop had already been pulled back to a safe distance, so it was comparing a number against itself and could never be true. It had been unreachable in all four places it appears, for both long and short trades. It now compares before adjusting.
+- **A refused stop no longer blocks its own replacement.** The strategy remembers the last stop price it sent so it doesn't spam the broker with tiny adjustments. It was recording that price when the order was *sent* rather than when it was *accepted*, so a refused stop still counted as "already handled" — and every later attempt to place that same stop was skipped as a duplicate. It now only records stops the broker actually confirmed.
+
+### 🔧 Under the hood
+- **New tick-by-tick guard: if a trade is open and nothing is protecting it, do something about it.** Every tick, the strategy now checks whether a working stop actually exists. If the intended stop level is still valid, it re-places it. If the market has already run past it, it closes the trade instead of quietly re-arming further out.
+  *Dev note: re-arming was the tempting option and it's the wrong one. On the ES trade, "just place a legal stop" would have parked it 14.5 points away on a trade whose intended risk was 9.5 points — turning a refused stop into a silent 50% risk increase nobody asked for. Once the market is past the planned exit, the risk budget is already spent; the honest move is out.*
+- Verified before shipping: strategy-state bookkeeping passes its parity check (153 fields, all mirrored), the syntax parse is clean, and the strategy recompiled successfully at 00:48.
+
+### 🧭 Known issues
+- **The two trades that triggered all this were not rescued by the fix** and had to be handled by hand. Both were ES shorts — one entered at 7499.50 with a refused stop at 7507.25, the other at 7502.25 with a refused stop at 7511.75, together about **−$1,500** while unprotected. The fix protects the next trade, but a position that gets orphaned from its strategy across a restart is outside what the strategy can reach on its own.
+- The underlying trigger — the strategy's price reading briefly lagging the broker's during a fast spike — is mitigated here, not eliminated. The new guard catches the consequence; it doesn't make the two readings agree.
+
+---
+
 ## Patch 2026-07-19 — "Regime Change"
 
 The market's July 16–17 selloff set off two data alarms. This patch teaches the alarms the difference between "the market changed" and "the data broke," fixes a stat freeze in background tabs, and adds a hardware monitor for the machine itself.
