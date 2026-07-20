@@ -6,6 +6,23 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ---
 
+## Patch 2026-07-20h — "Sweeping Up the Trades That Never Said Goodbye"
+
+The verification suite was flagging a failure, so I dug in. Earlier today's fix stopped the strategy from *creating* trades that forget to record their exit — but it couldn't go back and fix the ones already broken. Thirteen trades from the last day and a half had closed without ever writing their "I exited here" marker, leaving **22,651 rows** of training data that quietly teach the model a lie: that positions never get out. This patch cleans them up.
+
+### 🐛 Fixed
+- **Removed 13 "exitless" trades that were poisoning the exit model's training data.** Each one was a real, closed trade whose final exit was never recorded (all closed *before* today's earlier fix went in), so its entire history read as one long "still holding" with no ending. Left in place, they'd bias the model toward holding trades too long. They're not deleted — every row was moved into a dated archive folder first, so the evidence is kept. The failing health check went straight back to green afterward.
+
+### 🛠️ Under the hood
+- New cleanup tool picks trades to quarantine by the *exact same rule* the health check uses (closed, and no recorded exit), rather than a hardcoded date — so it stays correct if this ever recurs. It refuses to touch anything that might still be an open position (30-minute safety margin), archives before it removes, and preserves any rows the live service writes while it runs.
+
+### ⚠️ Known issues
+- One lookalike trade in a different data series shares an ID with a cleaned one (IDs are timestamp + symbol, so two series can collide). It also has no recorded exit but is still inside the "might be open" window, so it was deliberately left alone — it'll either record its exit normally or get caught on a later check.
+
+*Dev note: root cause and the strategy-side fix are in patch 20-07-20e / the midday guide entry; this patch is purely the data cleanup for the orphans that predate it. The check reads the files directly, so no service restart was needed to clear it.*
+
+---
+
 ## Patch 2026-07-20g — "The Escape Map Was Two Days Old"
 
 Did a full check of the disaster-recovery setup — the off-site backups that would rebuild everything if the machine died. The good news: it works, and today's earlier fix to the off-site upload is confirmed doing its job. The catch: the one document that explains *how* to recover was quietly out of date inside every backup.
