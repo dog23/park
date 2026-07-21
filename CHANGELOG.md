@@ -20,6 +20,17 @@ A little black terminal window kept flashing onto the desktop about once a minut
 
 ---
 
+## Patch 2026-07-20l — "Tell Me When You Touch It"
+
+The auto-tuner edits the live strategy every five minutes and never said a word — which is how a whole cascade of bad changes slipped by unnoticed for hours. Fixed that: now it speaks up.
+
+### 🆕 New
+- **Phone alert whenever the auto-tuner changes the strategy.** Any time it actually writes a change to the strategy file, it now sends a push notification listing exactly what it changed (old value → new value, for every edit in that run). It only fires when something really changed — quiet runs stay quiet — so it won't spam. Comes through on the same phone alert channel as the existing safety watchdogs, so there's nothing new to set up.
+
+*Dev note: single push per run, hooked right after the file write and gated on `applied > 0`; reuses the shared ntfy topic, priority high, robot/wrench tags. Fully fault-tolerant — a network or ntfy outage logs a warning and the apply run continues normally. Goes live on the task's next 5-minute run (fresh import each run). Verified with a live test push (HTTP 200).*
+
+---
+
 ## Patch 2026-07-20k — "The Whole Dashboard Was Cranked to Eleven"
 
 After fixing the one-tick pullback, I checked every other knob the auto-tuner is allowed to touch — and the pullback wasn't alone. The same July-19 evidence storm had shoved *everything* to an extreme at once: the entry filters were flung wide open, and the safety cushion we set aside for entry slippage had been shaved down to almost nothing. None of these were random garbage like the pullback was, but all were parked at the far edge of what's allowed, which is its own kind of broken.
