@@ -20,6 +20,20 @@ A little black terminal window kept flashing onto the desktop about once a minut
 
 ---
 
+## Patch 2026-07-20m — "One More Knob I'd Waved Through"
+
+When I audited the auto-tuner earlier today I said the position-sizing values were clean. That was only half a check — I'd looked at the change-log but not the live numbers. Looked properly this time, and the Dow (YM) sizing had quietly drifted.
+
+### ⚖️ Balance
+- **Restored YM position sizing to its designed values.** Three YM sizing numbers had been nudged down roughly 15–25% (its ladder scaling factor and both of its upper-tier dollar targets). Every other instrument was spot-on and evenly spaced; only YM was off-pattern. Put all three back.
+
+### 🔍 What was actually fine
+- The core per-trade risk scaling for all four instruments was pristine — untouched, evenly spaced, exactly as designed. The drift was confined to YM's ladder and upper-tier targets.
+
+*Dev note: unlike the July-19 ratchet storm (fixed-step, pinned at extremes), the YM drift came through the sizing path, which has curve-invariant + resimulation gates — so it was moderate and in the conservative direction, drift rather than corruption. No new hard guard added: that invariant system already bounds sizing (it's what clamped NQ to 877 on July 18). Restored values: LadderMultiplier YM 0.021245 → 0.025, Tier2Target YM 300.05 → 400 (risk) and 255 → 300 (ladder); three restore markers re-seed the evidence cutoffs. Corrects the "sizing was clean" claim in patch 20k.*
+
+---
+
 ## Patch 2026-07-20l — "Tell Me When You Touch It"
 
 The auto-tuner edits the live strategy every five minutes and never said a word — which is how a whole cascade of bad changes slipped by unnoticed for hours. Fixed that: now it speaks up.
