@@ -223,6 +223,11 @@ Phone alerts for the live account used to say *what* was ordered but never *why*
 ### ℹ️ Worth knowing
 - The ML rows on the dashboard look empty because the models **aren't trained yet** — the entry model has driven 4 trades out of ~445, and the ML exit has never fired once. That's expected, not broken (earlier firings were poisoned data, since purged). Both dashboard cards fill themselves in automatically once the models go live; nothing further to build.
 
+### 🔧 Tweaked same evening
+- **Dropped the pullback line** — one setting nobody needed to see on the phone.
+- **Added the actual market price at the moment the order went live**, right next to the order's own price, so you can see at a glance how far a resting order sits from where the market actually was.
+- Confirmed live: the code change compiled cleanly and every running copy picked it up with zero errors.
+
 ---
 
 ## Patch 2026-07-20g — "The Escape Map Was Two Days Old"
