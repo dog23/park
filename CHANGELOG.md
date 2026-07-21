@@ -6,6 +6,23 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ---
 
+## Patch 2026-07-21h — "Only Read What's New"
+
+The last patch fixed the steady one-second-per-load cost and left a known issue on the table: an occasional multi-second spike whenever the ML side logs a new sample, because that file's cache was all-or-nothing — one new line meant re-reading everything. Turned out "occasional" was doing a lot of work in that sentence.
+
+### 🐛 Fixed
+- **The "occasional" spike was actually happening every few seconds during market hours.** Checked the real numbers: that file gets a new entry roughly every 4 to 10 seconds while the strategies are trading, sometimes faster. A cache that gets thrown out every few seconds isn't really caching anything — it was paying the full multi-second cost on a large share of every dashboard load during the trading day, not occasionally at all.
+- **Now it only reads what's actually new.** Instead of re-reading the whole file every time a single line gets added, it remembers exactly how far it already read and picks up from there next time — so a file that's been read once effectively never gets re-read from the start again, no matter how many times it grows afterward. The one-time cost of reading everything that already exists still happens once, right after the dashboard restarts; every load after that is close to instant regardless of how often new data comes in.
+- **Applied the same fix to the sister file that tracks vetoed entries.** It's been quiet for several days and wasn't causing today's slowness, but it's written the exact same way, so it got the same treatment now rather than waiting to become the next surprise.
+
+### ⚡ Performance
+- Confirmed correct before shipping: built a small test file and walked it through appending one line, appending a line that got cut off mid-write (simulating the exact moment a busy trading session is writing to it), completing that line, and finally shrinking the file back down — each case behaved exactly as it should, including never mistaking a half-written line for a finished one.
+- Verified against the real files too: identical results, line for line, to the old always-re-read approach — this is strictly a speed change, not a data change.
+
+*Dev note: the safety net matters as much as the speed-up. This file is only ever appended to and never rewritten in normal operation, which is what makes "just remember where I left off" safe — but "never rewritten in normal operation" isn't the same as "never," so if the file were ever replaced or truncated by something outside the normal path, the code falls back to a full, correct re-read rather than trusting a stale bookmark into an out-of-bounds read or silently wrong data.*
+
+---
+
 ## Patch 2026-07-21g — "The Log That Never Got Smaller"
 
 Every dashboard felt sluggish today — not broken, just slow enough to notice on every load. Timed it instead of guessing, and it traced back to one file that quietly grew past the point its own reader could keep up with.
