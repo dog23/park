@@ -48,6 +48,7 @@ Full instructions: **[SETUP.md](SETUP.md)**. In short:
 - **The Python services** install and run from this repo — Python 3.13, `pip install -r requirements.txt`, then launch each service (`ml-services/MLService` on :8765, `ml-services/MLService_Trend` on :8767, `dashboards/` on :8766).
 - **The strategy** runs only inside **NinjaTrader 8**: copy the `.cs` files from [`strategies/`](strategies/) into `bin\Custom\Strategies\`, the [`addons/`](addons/) files into `bin\Custom\AddOns\`, and compile. All companion files needed to compile are included.
 - **Maintaining the models** — running data-poison checks, validation (ablation) tests, and retraining: see **[MAINTENANCE.md](MAINTENANCE.md)**.
+- **Auto-tuning** — how the "Reassess" cards (sizing, entry gates, pullback) automatically adjust `temalimit.cs`'s own constants from live-trade evidence: see **[AUTO-TUNING.md](AUTO-TUNING.md)**.
 
 ---
 
