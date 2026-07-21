@@ -6,6 +6,19 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ---
 
+## Patch 2026-07-20s — "Volume Knob"
+
+The Live dashboard has always chimed at you — a little sound for a win, a loss, an order filling, an order resting, a reversal. Handy, until you're on a call or just want quiet. Now there's an off switch, and it's not all-or-nothing.
+
+### 🎛️ UI
+- **New speaker button in the Live dashboard header.** Click it for a small menu with a checkbox for each of the five sounds — Win, Loss, Order filled, Order pending, Reversing — plus a "Mute all sounds" switch at the top. Check a box to silence just that one; check "Mute all" to silence everything at once.
+- **The button tells you at a glance.** It shows 🔊 when sound is on and flips to a red 🔇 the moment anything is muted, so you always know whether the dashboard can make noise.
+- **Your choice sticks.** Whatever you mute is remembered on that browser and survives a refresh — set it once and forget it. (It's per-browser, so muting on your desktop doesn't mute your phone.)
+
+*Dev note: purely a front-end change to `dashboard.html`; the five `Audio` alerts each now check a saved mute flag before playing, ahead of the existing 60-second cooldown. State lives in `localStorage`. No server restart — the page is served fresh on every load.*
+
+---
+
 ## Patch 2026-07-20k — "The Blinking Terminal"
 
 A little black terminal window kept flashing onto the desktop about once a minute — startling, but harmless once we traced it. Two of the background "watchdog" helpers (the ones that keep the ML service and NinjaTrader itself alive) were being launched in a way that briefly showed a command window every single time they ran. Every other watchdog on the machine already runs completely invisibly; these two just missed the memo.
