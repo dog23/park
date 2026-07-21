@@ -6,6 +6,27 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ---
 
+## Patch 2026-07-20t — "The Minute-Long Hiccup"
+
+The strategy kept printing `ML POST FAILED … timed out` — lots of them. Every so often the AI service simply stopped answering for a few seconds, and anything the strategy tried to send in that window was dropped on the floor. It turned out the service was spending most of its life re-reading the same enormous files over and over, for the benefit of a few dashboard panels.
+
+### 🐛 Fixed
+- **The AI service no longer freezes.** A plain "are you alive?" request used to take anywhere up to **8.7 seconds** during these hiccups. It now answers in **3–25 milliseconds**, with the internal freeze counter sitting at a flat zero.
+- **Four separate "cheap-looking" jobs were each reading a whole file every time they ran.** The worst offender: every time the strategy logged a single exit sample, the service re-read the *entire* 30 MB sample file — just to check the first line was still labelled correctly. That happened hundreds of times a minute. Each one is now either reading one line, or remembering the answer until the file actually changes.
+- **The dashboard's verification panel was the "every minute or two" culprit.** Once a minute it re-parsed a 265 MB file inside the service, locking everything else out for roughly fifteen seconds. That work now happens in a separate background process, so the panel still refreshes and nothing else notices.
+- **Restarting the service actually restarts it now.** The restart helper had been accidentally killing *itself* partway through — it never got as far as starting the new copy, so the service stayed down for up to two minutes until a watchdog noticed. Restarts now complete in about five seconds.
+
+### 🛠️ Under the hood
+- The background job that feeds the model-health panels was re-reading roughly **695 MB every ten seconds**. The dashboard-only parts of it now run once every ten minutes; nothing they display changes faster than that anyway.
+- Added a permanent diagnostics page for this class of problem. It watches the service's own responsiveness and, the moment it freezes, snapshots what every thread inside it is doing — which is how all four causes were named instead of guessed at.
+
+### 📋 Known issues
+- Windows Defender is scanning every read of these very large data files. Excluding the trading folder from real-time scanning would shave off what's left of the delay, but that's a security setting and needs to be changed by hand.
+
+*Dev note: symptom was a trivial in-memory `/health` taking 0.5–8.7s in ~20s bursts while every endpoint measured in isolation was fast. Ruled out by measurement, in order: request payload size (a 844 KB `/predict-exit` body costs 82ms), garbage collection (`gc.callbacks` recorded zero pauses ≥300ms across 5.5s loop stalls), TIME_WAIT/port exhaustion, box-wide contention (8766 probed in lockstep stayed at 2–200ms), and request flooding (44 concurrent connections, no stall). The real answer came from a stall sampler thread dumping every thread's frames while the event loop was stuck: the loop was sitting in trivial socket calls **waiting for the GIL**, held in turn by `known_groups()` globbing the NT8 root on the event loop, `create_exit_tsv_if_missing()`'s `readlines()`, `phase3_unlocked_for_group()`'s per-call history parse, and `_compute_verification_readiness()`'s full 265 MB in-process scan. Fixes: mtime-keyed caches, first-line-only header check, assembly moved off the loop via `run_in_threadpool`, readiness scan moved into the existing `ProcessPoolExecutor`, a 5s TTL on `/model-health`, `async def health`, and a heavy/light split in the refresh cadence (60s / 600s).*
+
+---
+
 ## Patch 2026-07-20s — "Volume Knob"
 
 The Live dashboard has always chimed at you — a little sound for a win, a loss, an order filling, an order resting, a reversal. Handy, until you're on a call or just want quiet. Now there's an off switch, and it's not all-or-nothing.
