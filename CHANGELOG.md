@@ -20,6 +20,24 @@ A little black terminal window kept flashing onto the desktop about once a minut
 
 ---
 
+## Patch 2026-07-20n — "Sleep On It First"
+
+The auto-tuner's problem was never how big its changes were — it was how *often*. It could nudge the same setting every five minutes, walking it clear across its range before anyone noticed. Today it learns patience, and we wipe the slate clean so it starts fresh from the designed defaults.
+
+### 🆕 New
+- **A change now has to prove itself before it happens.** The tuner must want the exact same adjustment for **three runs in a row (~15 minutes)** before it's allowed to make it. A one-off blip in the data no longer moves anything — only a trend that actually persists.
+- **After it changes something, that setting is frozen for 6 hours.** This forces the tuner to live with its decision and watch how it plays out before touching the same dial again, instead of re-deriving a brand-new target every five minutes.
+
+### ♻️ Reset
+- **Wiped every auto-tuned value back to its designed default to start fresh** — entry filters, expiry, slippage cushion, pullback distances, position sizing, all of it. Paired with a clean cutoff: the tuner now ignores every trade recorded before this reset, so it can't immediately re-derive the same drift from the old, messy history. The very first run after the reset correctly found nothing to do.
+
+### ⚠️ Known issues
+- The live tuner clobbered one pullback value **twice more** while I was still saving the new code — each 5-minute run that fired before the patch landed re-applied the old behavior. Once the patience/cooldown logic was actually on disk, the next run went quiet and the resets held. Lesson logged: land the guard code *first*, reset values *second*.
+
+*Dev note: both filters live in `_try_apply`, the single chokepoint all six apply-sites funnel through — persistence streak + cooldown stamp per constant in a new `auto_apply_change_state.json`, keyed by the patch description. `PERSISTENCE_RUNS=3`, `COOLDOWN_HOURS=6`. Fresh-start floor is `EVIDENCE_RESET_ISO=2026-07-20T18:02:00`, applied via a `_FloorDict` wrapper on `_evidence_cutoffs` so it covers constants with no prior history too. Unit-tested (persistence blocks runs 1–2 / applies run 3; cooldown holds 6h; absent-run resets streak); a live `--apply` returned "Nothing to do." NQ Tier-2 risk target reset 877.06 → 1000.*
+
+---
+
 ## Patch 2026-07-20m — "One More Knob I'd Waved Through"
 
 When I audited the auto-tuner earlier today I said the position-sizing values were clean. That was only half a check — I'd looked at the change-log but not the live numbers. Looked properly this time, and the Dow (YM) sizing had quietly drifted.
