@@ -6,6 +6,20 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ---
 
+## Patch 2026-07-20k — "The Blinking Terminal"
+
+A little black terminal window kept flashing onto the desktop about once a minute — startling, but harmless once we traced it. Two of the background "watchdog" helpers (the ones that keep the ML service and NinjaTrader itself alive) were being launched in a way that briefly showed a command window every single time they ran. Every other watchdog on the machine already runs completely invisibly; these two just missed the memo.
+
+### 🐛 Fixed
+- **The watchdogs now run silently.** Rerouted the two offenders — the ML-service watchdog (fires every minute) and the NinjaTrader process watchdog (every two minutes) — through the same invisible-launcher trick the other background jobs already use. No more window flashing onto your screen while you work.
+
+### 🛠️ Under the hood
+- Added two tiny hidden-launcher scripts and pointed the scheduled tasks at them instead of calling PowerShell directly (which is what caused the flash). The watchdogs themselves are unchanged — same job, same one- and two-minute schedules, they just don't show their face anymore. A one-time admin approval was needed to update the tasks; a re-apply script is saved alongside the maintenance tools in case a task ever gets rebuilt.
+
+*Dev note: `-WindowStyle Hidden` on a scheduled `powershell.exe` action still blinks a console for a frame before it applies; the reliable fix is a `wscript.exe` + VBS `Run …, 0` wrapper (already proven by the MEGA-backup task). Both tasks now execute `wscript.exe → *_hidden.vbs` with `Hidden=True`.*
+
+---
+
 ## Patch 2026-07-20j — "One Tick Is Not a Pullback"
 
 Caught a bad one. Most of the entry templates were trying to buy dips and sell rips with a "pullback" of a **single tick** — the smallest price increment there is. A pullback entry is supposed to wait for the price to come back a meaningful distance before jumping in; a one-tick wait is basically no wait at all, and we'd already learned (back on July 18) that trading this way *lost money on three of the four instruments*. We fixed it then. It quietly came back.
