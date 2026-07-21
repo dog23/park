@@ -25,4 +25,3 @@ Multi-market trend breakouts (oil, FX, index futures, gold) driven by the trend 
 - **Auto-committed every few minutes** to a local Git repo for rollback history (see [../infrastructure/](../infrastructure/)) — edits are versioned even mid-session.
 - NinjaScript **auto-compiles** on save, so a single stray character anywhere under the strategy folder silently keeps the *old* code trading — a constraint that shaped how carefully these are edited.
 
-*These files are a redacted snapshot. Account/order IDs and home paths have been replaced with placeholders; the logic is unchanged.*

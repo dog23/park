@@ -2,7 +2,7 @@
 
 This is an automated trading strategy for **NinjaTrader 8**, together with the machine-learning services and automation that run it. Two strategies (`temalimit`, `TrendTcnStrategy`) decide when to enter and exit trades using machine-learning models served from local Python services. Web dashboards show what the system is doing, and a set of Windows scheduled tasks keeps everything running unattended.
 
-Redacted snapshot: 39 source files, ~30,000 lines. See [Redaction](#redaction).
+39 source files, ~30,000 lines.
 
 ---
 
@@ -61,19 +61,5 @@ Full instructions: **[SETUP.md](SETUP.md)**. In short:
 | [`dashboards/`](dashboards/) | The live dashboard server |
 | [`infrastructure/`](infrastructure/) | Watchdogs, backups, scheduled tasks, hardware monitor |
 | [`diagrams/`](diagrams/) | Wireframes / design diagrams |
-
----
-
-## Redaction
-
-This is a public snapshot; personal identifiers were removed before publishing:
-
-- Usernames and `C:\Users\…` home paths → `<user>`
-- Push-notification topic IDs → `<ntfy-topic>`
-- Broker account and order IDs → `<account>` / `<order-id>`
-- Loopback addresses → `localhost`
-- API keys are referenced only through environment variables — none appear in source.
-
-A local `git` pre-push hook scans every change for emails, phone numbers, SSN-shaped strings, IP addresses, home paths, and account-number-shaped digit runs, and blocks the push if it finds any.
 
 *Built and maintained solo. Not investment advice; no trading-performance claims are made.*

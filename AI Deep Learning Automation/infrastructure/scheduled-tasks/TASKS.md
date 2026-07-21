@@ -14,7 +14,7 @@ Every long-running responsibility in the system is a **Windows Task Scheduler** 
 | **NT8TraceLogCleanup** | scheduled | Prune platform trace logs so disk doesn't fill |
 | **NT8AutoCommit** | every few min | Auto-commit the working tree for local rollback history |
 | **StrategyAutoCommit** | every 5 min | Auto-commit strategy edits (local rollback; never pushed) |
-| **ParkAutopushWatchdog** | on change | Debounced auto-commit + push of the docs repo, behind the PII pre-push hook |
+| **ParkAutopushWatchdog** | on change | Debounced auto-commit + push of the docs repo |
 
 Plus a daily model-retrain trigger and a daily off-site backup/upload, invoked from the ML service scripts (`ml_daily.ps1`, `backup_ml_weights_daily.ps1`, `upload_ml_backup_to_mega.ps1`).
 

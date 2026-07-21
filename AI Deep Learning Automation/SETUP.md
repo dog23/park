@@ -49,7 +49,7 @@ python live_dashboard_server.py         # honors PORT env var, defaults to 8766
 Each is independent; run any subset. Open the printed `http://localhost:<port>` in a browser.
 
 ### Configuration (paths & env vars)
-The services default to a Windows NinjaTrader 8 install path and read the strategy's log/data files from it. Every path is overridable by environment variable — **redacted values (`<user>`, `<ntfy-topic>`) must be replaced with your own**:
+The services default to a Windows NinjaTrader 8 install path and read the strategy's log/data files from it. Every path is overridable by environment variable — **replace `<user>` and `<ntfy-topic>` below with your own values**:
 
 | Env var | What it points at | Default |
 |---------|-------------------|---------|
@@ -59,7 +59,7 @@ The services default to a Windows NinjaTrader 8 install path and read the strate
 
 On non-Windows, set `NT_USER_DATA_DIR` to any working directory — the services create the subfolders they need (`exist_ok=True`) and simply show empty panels until data appears.
 
-Phone alerts (watchdogs, hardware monitor) post to an [ntfy](https://ntfy.sh/) topic; the topic ID is redacted to `<ntfy-topic>` throughout — set your own before using the alerting scripts.
+Phone alerts (watchdogs, hardware monitor) post to an [ntfy](https://ntfy.sh/) topic — set your own topic ID (replacing `<ntfy-topic>`) before using the alerting scripts.
 
 ---
 
@@ -82,7 +82,7 @@ The `.cs` files are **NinjaScript** and run **only inside NinjaTrader 8** — th
 | `PullbackStateExporter.cs` | Writes pullback-evidence state |
 | `ManualExitCommand.cs` / `ManualCancelCommand.cs` | Chart buttons for manual exit/cancel |
 
-> These exporters write the TSV/log files the Python services consume — so with the strategy running in NT8 and the services running from this repo, the full AI loop is connected. Redacted the same way as everything else (`<user>`, `<account>`, etc.).
+> These exporters write the TSV/log files the Python services consume — so with the strategy running in NT8 and the services running from this repo, the full AI loop is connected.
 
 ---
 

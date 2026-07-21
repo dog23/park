@@ -24,11 +24,11 @@ Designed around one question: *if this laptop died right now, could I rebuild ev
 ## Hardware & housekeeping — `hardware_monitor/`, `scheduled-tasks/`
 
 - **[`hardware_monitor/hw_monitor.py`](hardware_monitor/hw_monitor.py)** — watches CPU/GPU/thermals/disk on the trading box and pushes phone alerts on trouble; zero-config, never crashes the thing it's monitoring.
-- **[`scheduled-tasks/`](scheduled-tasks/)** — the task-registration scripts (`setup_watchdog_task.bat`, the S4U upgrade helper, `ml_daily.ps1`), log housekeeping (`trace_log_cleanup.ps1`), and this repo's own **auto-push** pipeline (`autopush.ps1` + `watch_and_autopush.ps1`), which is guarded by a local PII pre-push hook so nothing personal ever leaves the machine.
+- **[`scheduled-tasks/`](scheduled-tasks/)** — the task-registration scripts (`setup_watchdog_task.bat`, the S4U upgrade helper, `ml_daily.ps1`), log housekeeping (`trace_log_cleanup.ps1`), and this repo's own **auto-push** pipeline (`autopush.ps1` + `watch_and_autopush.ps1`).
 
 ## Alerting
 
-All of it reports to a single phone via **[ntfy](https://ntfy.sh/)** push — no mobile app to build, no inbox to watch. Routine success is silent; only things that need a human make noise. Alert topics are redacted to `<ntfy-topic>` in this snapshot.
+All of it reports to a single phone via **[ntfy](https://ntfy.sh/)** push — no mobile app to build, no inbox to watch. Routine success is silent; only things that need a human make noise.
 
 ## Principles
 

@@ -6,6 +6,21 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ---
 
+## Patch 2026-07-21a — "When Did You Actually Order That?"
+
+Pending Trades has always shown "Placed" — the moment a limit order goes out. But the second that order filled, that timestamp vanished: every other table only showed the *fill* time. So you could never look back at a finished trade and see how long it sat waiting to get filled. Now you can.
+
+### 🆕 New
+- **"Placed" column added to Live Trades and Completed Trades**, sitting right next to "Opened". Opened = when the order filled. Placed = when it was originally sent. The gap between them is how long the limit sat working.
+- **The trade chart popup now shows it too**, as an "Entry Placed" tile that also spells out the wait — e.g. *"waited 4m 12s"*.
+
+### 🐛 Fixed
+- **First attempt looked broken, and was.** Placed and Opened showed identical times on every row. Two separate causes, both now fixed: the display was quietly falling back to the fill time whenever the real placed time was unknown (making an unknown look like a real, always-instant fill), and the strategy was reading a value that gets erased the instant an order fills — so it would have stayed blank forever. Unknown now honestly shows "--".
+
+*Dev note: the erase is the interesting one. `entryOrderSubmittedTime` is cleared inside OnOrderUpdate's Filled/Cancelled/Rejected block, so by the time the heartbeat or the exit-row writer runs it's always MinValue. Fix is a dedicated `entryPlacedTime` captured inside that same block just before the wipe, on Filled only — done there rather than in OnExecutionUpdate because NinjaTrader doesn't guarantee which of the two callbacks fires first. Mirrors `entryFillTime` including multi-symbol context save/restore. On the reading side, the completed-trades file now contains both the old and new row layouts at once, so the reversal-flag parser probes the new position and falls back to the old — without that it would have silently dropped the flag on all 300 existing trades (verified 300/300 kept). Same caveat as the last few strategy patches: the running strategy instances stay on the old compiled copy until they next cycle, so the column reads "--" rather than guessing until then.*
+
+---
+
 ## Patch 2026-07-20v — "The Cap That Capped the Wrong Thing"
 
 The new "Exp" column from the last patch immediately did its job: it showed the expiry cap wasn't actually holding at 7 minutes like intended, for the loosest set of templates. Good catch, caught fast, fixed properly this time.
