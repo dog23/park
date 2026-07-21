@@ -6,6 +6,20 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ---
 
+## Patch 2026-07-21c — "Copper Doesn't Trade in August"
+
+The trend strategy refused to start all morning. One expired contract month was enough to take all nine of its markets offline at once.
+
+### 🐛 Fixed
+- **TrendTcn starts again.** It was asking NinjaTrader for an August copper contract, which does not exist — copper only trades March, May, July, September and December. The strategy's contract-rollover rules had copper marked as "trades every month", so the moment July rolled it reached for August and NinjaTrader rejected it. Copper now knows its own calendar and rolls July → September.
+- **One bad symbol no longer takes down the other eight.** That's what actually happened here: crude, the euro, both index futures, the DAX, the Nikkei, bitcoin and gold were all fine, but they load as a group, so the rejected copper contract stopped every one of them from loading.
+
+*Dev note: the fallback this used was always labelled in the code as the rough one — the other eight instruments each got a rollover convention copied from a strategy that had been running with it for months, while copper got "assume every month is tradable" and a comment saying to double-check it before trusting it live. It held up for as long as the July contract was current and broke the day it wasn't. Verify that September copper is present in Instrument Manager before re-enabling.*
+
+*Worth noting: this strategy is also one of the files the freeze watchdog reads to tell "NinjaTrader is alive" apart from "everything has stopped". While it was down, that check was running on fewer signals than it's designed to have.*
+
+---
+
 ## Patch 2026-07-21b — "It Was Never a Misbooked Fill"
 
 Two mornings in a row the whole strategy fleet went silent for half an hour with positions left unmanaged. We now know exactly where it stops — and, just as usefully, that the thing everyone was chasing was never a bug at all.
