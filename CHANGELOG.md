@@ -6,7 +6,7 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ---
 
-## Patch 2026-07-21d — "Ask Before You Knock"
+## Patch 2026-07-21e — "Ask Before You Knock"
 
 The freeze from the last two mornings is fixed.
 
@@ -25,7 +25,7 @@ The freeze from the last two mornings is fixed.
 *Dev note: the flag is an optional parameter added last, so all three existing callers compile unchanged — worth the small awkwardness to avoid touching call sites on the prediction path that were never implicated.*
 
 ---
-## Patch 2026-07-21c — "Copper Doesn't Trade in August"
+## Patch 2026-07-21d — "Copper Doesn't Trade in August"
 
 The trend strategy refused to start all morning. One expired contract month was enough to take all nine of its markets offline at once.
 
