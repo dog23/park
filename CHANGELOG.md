@@ -6,6 +6,25 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ---
 
+## Patch 2026-07-21d — "Ask Before You Knock"
+
+The freeze from the last two mornings is fixed.
+
+### 🐛 Fixed
+- **The two-doorway deadlock is gone.** When a stop-loss fill went to write its exit record, it was reaching for recent bar data at that exact moment — and reading bar data quietly requires a platform-internal latch that a simultaneous price update might already be holding. Now the strategy takes a copy of the handful of indicator values it needs once per bar, on the thread where that's already safe, and the fill handler reads the copy instead of reaching for live data. It never needs both doors at once, so the collision is structurally impossible rather than merely unlikely.
+- **A second, smaller instance of the same mistake**, in the "couldn't build the exit sample" warning message itself — it also reached for live indicator data, meaning it could have hung while trying to report that something went wrong. It reads the copy now too.
+
+### ⚖️ Balance
+- **Exit records keep the exact fill price.** Only the indicator values are as-of the last bar — which is what they'd have been anyway, since indicators only move bar to bar. If a trade opens and closes inside a single bar and no copy exists yet, that one training sample is skipped rather than risking the hang.
+
+### ⚠️ Known issues
+- The same collision is still possible in two other places that read bar data off the main thread: order-status updates, and the **tick-by-tick trailing stop** (which runs on every price change while a position is open). Not touched in this patch — auditing next.
+
+*Dev note: the values are stashed in a dictionary keyed by data-series index rather than added to the per-symbol context object. That keeps multi-symbol instances from reading each other's copy without needing matching save/restore wiring and a context-parity check. The new lock is only ever held around a dictionary read or write with no calls out from inside it, so it can't become part of a cycle itself. And explicitly not attempted: making both sides take the two latches in the same order — the platform's latch is internal and can't be acquired up front, so the only real fix is never needing both.*
+
+*Dev note: the flag is an optional parameter added last, so all three existing callers compile unchanged — worth the small awkwardness to avoid touching call sites on the prediction path that were never implicated.*
+
+---
 ## Patch 2026-07-21c — "Copper Doesn't Trade in August"
 
 The trend strategy refused to start all morning. One expired contract month was enough to take all nine of its markets offline at once.
