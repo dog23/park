@@ -145,6 +145,24 @@ The verification suite was flagging failures, so I dug in — and two of them tu
 
 ---
 
+## Patch 2026-07-20h — "The Alert That Shows Its Work"
+
+Phone alerts for the live account used to say *what* was ordered but never *why*. Now a resting entry order arrives with the full settings profile that produced it — so you can judge a trade from your pocket without opening the platform.
+
+### 🆕 New
+- **Pending-order alerts now carry the template that placed them.** The alert appends the active template's number, its selectivity, the pullback distance, and the three indicator gates (money-flow, strength, stochastic), plus that market's risk-per-trade and daily limits. Entry orders only — protective stops move constantly as they trail, and repeating five lines on every step would bury the phone. The quantity line was dropped as redundant.
+- **The pullback shows both numbers when they differ.** The template proposes a distance; live volatility stretches or compresses it before the order goes out. You now see both — the setting and what actually priced the order — rather than a number that quietly wasn't used.
+- **Machine-learning trades announce themselves.** When the model actually drives an entry, one extra line shows its confidence against the minimum it had to clear. It uses the *same* test the dashboard uses, so the phone alert and the dashboard's direction breakdown can never disagree about what counts as an ML trade.
+
+### 🛠️ Considered and deliberately rejected
+- **Renaming order signals to tag ML trades.** The obvious idea — call it `YM_MLL` instead of `YM_L` — turns out to be genuinely dangerous. The strategy recognises its own entries from a fixed list of names; a name missing from that list means the code that arms the protective stop never runs. Every ML trade would open **with no stop**, and its exits would be silently ignored. It was also unnecessary: the dashboard already separates ML entries into their own rows.
+  *Dev note: this is the same failure mode as this morning's naked position, which is exactly why it was worth stopping to trace before writing anything.*
+
+### ℹ️ Worth knowing
+- The ML rows on the dashboard look empty because the models **aren't trained yet** — the entry model has driven 4 trades out of ~445, and the ML exit has never fired once. That's expected, not broken (earlier firings were poisoned data, since purged). Both dashboard cards fill themselves in automatically once the models go live; nothing further to build.
+
+---
+
 ## Patch 2026-07-20g — "The Escape Map Was Two Days Old"
 
 Did a full check of the disaster-recovery setup — the off-site backups that would rebuild everything if the machine died. The good news: it works, and today's earlier fix to the off-site upload is confirmed doing its job. The catch: the one document that explains *how* to recover was quietly out of date inside every backup.
