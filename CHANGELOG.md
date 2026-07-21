@@ -6,6 +6,21 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ---
 
+## Patch 2026-07-20j — "One Tick Is Not a Pullback"
+
+Caught a bad one. Most of the entry templates were trying to buy dips and sell rips with a "pullback" of a **single tick** — the smallest price increment there is. A pullback entry is supposed to wait for the price to come back a meaningful distance before jumping in; a one-tick wait is basically no wait at all, and we'd already learned (back on July 18) that trading this way *lost money on three of the four instruments*. We fixed it then. It quietly came back.
+
+### 🐛 Fixed
+- **Restored real pullback distances on every high-tier template (and all the small-cap/RTY ones).** Each instrument scales its pullback by a tuning multiplier; five of those multipliers had been ground down to near-zero (around one-hundredth of their intended size), which collapsed the actual pullback to a single tick across a huge swath of templates. Put all five back to their designed values, so pullbacks are once again measured in the *tens* of ticks where they belong.
+- **Found out why it came back — and slammed the door.** The auto-tuner that adjusts pullback distance based on missed fills had no lower limit: every time an order just missed, it nudged the target *tighter*, and with nothing stopping it, it kept going all the way down to one tick. That's the loop that undid July 18's fix. It can't happen again now (see below).
+
+### 🛠️ Under the hood
+- **Added a hard floor of 5 ticks on any pullback, enforced in three places.** The strategy itself now refuses to place a pullback tighter than 5 ticks no matter what the multiplier or volatility adjustment says, and the auto-tuner is forbidden from even *proposing* anything tighter than 5. Five ticks is the strategy's own designed minimum (what the calmest low-tier templates already use), so this only cuts off the broken range, nothing legitimate.
+
+*Dev note: this is the same regression as the July-18 "1-tick high-tier" fix, which had relied on a soft "seeded cutoff" that fresh no-fill evidence could out-vote over time. This time the floor is a real constant (`MinPullbackTicks` in the strategy, mirrored by `MIN_PULLBACK_TICKS_FLOOR` in the automation), not a nudge that can be eroded. Strategy side autocompiles; the automation floor applies on its next run (fresh import, no restart).*
+
+---
+
 ## Patch 2026-07-20i — "The Order That Overstayed Its Welcome"
 
 Noticed the entry orders were hanging around far too long. When the strategy wants in on a trade, it places a limit order at a specific price and waits for the market to come to it — but if it never does, that order should give up and cancel so a stale price doesn't fill minutes later when the setup has gone. That "give up" timer had quietly ballooned to **22–26 minutes** on the tighter templates. A limit order resting live for nearly half an hour is asking to get filled at exactly the wrong moment.
