@@ -20,6 +20,25 @@ A little black terminal window kept flashing onto the desktop about once a minut
 
 ---
 
+## Patch 2026-07-20k — "The Whole Dashboard Was Cranked to Eleven"
+
+After fixing the one-tick pullback, I checked every other knob the auto-tuner is allowed to touch — and the pullback wasn't alone. The same July-19 evidence storm had shoved *everything* to an extreme at once: the entry filters were flung wide open, and the safety cushion we set aside for entry slippage had been shaved down to almost nothing. None of these were random garbage like the pullback was, but all were parked at the far edge of what's allowed, which is its own kind of broken.
+
+### ⚖️ Balance
+- **Entry filters reset to their intended strictness.** The three gates that decide whether a setup is worth taking (two momentum gates and a stochastic one) had all been loosened to their maximum, meaning the strategy was waving through setups it would normally skip. Reset all three back to the designed baseline (no extra loosening).
+- **Restored the entry-slippage cushion.** The buffer we reserve to absorb slippage on entries had been ground down from its designed 10% to about 2.4% — almost no cushion. Put it back to 10%.
+
+### 🛠️ Under the hood
+- **Capped how far the auto-tuner can open the gates.** Same lesson as the pullback and expiry fixes: resetting isn't enough if the automation can just re-inflate. Lowered the gate-loosening ceiling to a third of what it was, so even at full stretch the filters can't be flung wide open again.
+- **Re-seeded the tuner's evidence clock** on every value I reset, so it has to re-earn any future change from scratch rather than snapping back on day-old data.
+
+### ⚠️ Known issues
+- **The auto-tuner runs every 5 minutes and edited the strategy mid-session while I was working** — it briefly reverted one pullback value before the new floor was in place; I put it back. It can't be paused without an admin action, so it was left running. The pullback, expiry, and gate limits are now hard walls it can't cross; the slippage cushion is protected only by the re-seeded evidence clock, so keep half an eye on it over the next few days.
+
+*Dev note: the runaway is `TemaLimitAutoApplySizing` (SYSTEM scheduled task, 5-min cadence). Guards now in place: `MinPullbackTicks=5`, `EXPIRE_MAX_TOTAL_EXTRA=7`, `GATE_MAX_TOTAL_WIDEN` 15/15/0.15 → 5/5/0.05. Slippage floor left at 0.02 per call — cushion reset but not hard-guarded. Post-guard 5-min runs (17:23–17:43) all applied nothing.*
+
+---
+
 ## Patch 2026-07-20j — "One Tick Is Not a Pullback"
 
 Caught a bad one. Most of the entry templates were trying to buy dips and sell rips with a "pullback" of a **single tick** — the smallest price increment there is. A pullback entry is supposed to wait for the price to come back a meaningful distance before jumping in; a one-tick wait is basically no wait at all, and we'd already learned (back on July 18) that trading this way *lost money on three of the four instruments*. We fixed it then. It quietly came back.
