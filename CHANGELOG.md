@@ -6,6 +6,24 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ---
 
+## Patch 2026-07-21g — "The Log That Never Got Smaller"
+
+Every dashboard felt sluggish today — not broken, just slow enough to notice on every load. Timed it instead of guessing, and it traced back to one file that quietly grew past the point its own reader could keep up with.
+
+### 🐛 Fixed
+- **The live dashboard's main data feed was re-reading a 192,000-line file from scratch on every single request.** It's the log of every entry attempt an indicator gate blocked — useful evidence, but it only ever grows, and the code that turns it into dashboard numbers never learned to remember what it already parsed. Every other file this dashboard reads gets that memory; this one didn't, so it paid the full cost — about three quarters of a second — on every load, every poll, every tab.
+- **The technical-cards page on the other port inherited the same slowdown**, since its main data card is just a mirror of the live dashboard's feed. When the read above ran long, this page's own 4-second patience ran out first and it showed the card as offline instead of just slow.
+
+### ⚡ Performance
+- Fixed the same way the site already fixes this exact problem elsewhere: remember the parsed result and only redo the work when the file has actually changed, not on every request. Confirmed the fix by timing before and after — the affected load dropped from several seconds to under one, consistently, with the exact same numbers coming out the other end.
+
+### ⚠️ Known issues
+- A second file behind this same feed — the one recording every ML-vetoed entry, which now runs tens of megabytes — already remembers its parsed result, but it's being written to continuously while trading is live, so that memory keeps getting invalidated and re-paying a multi-second cost every time it changes. That's a deeper fix (teaching it to only read what's new, instead of starting over) and wasn't done today.
+
+*Dev note: found by timing every piece of the slow request in isolation rather than guessing which one was heavy — one showed a flat 780ms with no variation whatsoever between a cold and warm run, which is exactly what "there is no cache here" looks like next to everything else that speeds up the second time you ask.*
+
+---
+
 ## Patch 2026-07-21f — "Three More Of The Same"
 
 The freeze fix earlier today closed one door. Auditing the rest of the strategy found three more doors exactly like it — including one that was being opened on every single price tick.
