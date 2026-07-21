@@ -6,6 +6,17 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ---
 
+## Patch 2026-07-20u — "How Long Before It Gives Up"
+
+Small dashboard addition: the Pending Trades table now tells you exactly when a working limit order will cancel itself.
+
+### 🆕 New
+- **Pending Trades now shows an "Exp" column** next to the existing "Len" (how long an order has been waiting). "Exp" shows the actual expiry deadline for that specific order — e.g. "6m" — pulled live from the strategy, not a guessed constant. Hover it for the full sentence.
+
+*Dev note: threaded through the whole chain — the strategy's pending-trade exporter gained a new column (old rows without it just show "--", no crash), the dashboard server reads it, and the table/CSS got reindexed for the new column. Verified end-to-end against the live feed. Same caveat as tonight's other strategy edits: the already-running strategy instances need a recompile + restart before they start writing the new column — until then it correctly shows "--" instead of guessing.*
+
+---
+
 ## Patch 2026-07-20t — "The Minute-Long Hiccup"
 
 The strategy kept printing `ML POST FAILED … timed out` — lots of them. Every so often the AI service simply stopped answering for a few seconds, and anything the strategy tried to send in that window was dropped on the floor. It turned out the service was spending most of its life re-reading the same enormous files over and over, for the benefit of a few dashboard panels.
