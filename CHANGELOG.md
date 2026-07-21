@@ -6,6 +6,21 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ---
 
+## Patch 2026-07-21i — "The Fix Was There, It Just Wasn't Fast Enough"
+
+A short went out on Simvolume with no protective stop behind it, and it stayed that way for eleven minutes before anyone caught it. The platform itself dropped the notification that would have armed the stop — but the strategy already had a backup plan for exactly this, and today the backup plan wasn't quick enough.
+
+### 🐛 Fixed
+- **The self-healing check now runs on every price tick, not just once a bar closes.** There's a long-standing safety net that re-checks "do I actually have a stop working?" and fixes it if not — it's just always run at the pace of the strategy's own bars. Most of the time that's fine; bars close every few seconds. But on a slower series — the kind that only forms a new bar every so many contracts traded — a quiet market can leave that check waiting a very long time between chances to run. Now it also runs the instant a new price prints, so it's no longer at the mercy of how fast the chart itself is moving.
+- **This is what actually happened today, twice within fifteen minutes.** NinjaTrader's own internal plumbing logged a real, brand-new short position as if it were a no-op — the trace shows the genuine fill on one line and then, a heartbeat later, "nothing changed here" on the next. One of those two happened on a fast series and quietly fixed itself within about two minutes without anyone noticing. The other happened on a slow one and sat there naked for eleven minutes before it needed a human to step in.
+
+### ⚠️ Known issue, not something this patch can fix
+The root cause is inside NinjaTrader itself, not this strategy — its own dispatcher occasionally tells a strategy instance "your position didn't change" immediately after telling everyone else the position very much did change. Nothing in this codebase can stop that from happening again. What changed today is how quickly the strategy notices and corrects for it when it does.
+
+*Dev note: the natural place to put this looked like the tick-by-tick trailing-stop function, since it already runs on every price tick. It doesn't work there — that function's very first line bails out early if the strategy doesn't think it's holding a position, which is exactly the state a dropped fill leaves it in. The check had to go one level up, in the handler that decides whether to even look at a tick at all, because that handler asks the platform directly rather than trusting the strategy's own (possibly wrong) bookkeeping.*
+
+---
+
 ## Patch 2026-07-21h — "Only Read What's New"
 
 The last patch fixed the steady one-second-per-load cost and left a known issue on the table: an occasional multi-second spike whenever the ML side logs a new sample, because that file's cache was all-or-nothing — one new line meant re-reading everything. Turned out "occasional" was doing a lot of work in that sentence.
