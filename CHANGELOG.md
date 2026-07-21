@@ -20,6 +20,35 @@ The trend strategy refused to start all morning. One expired contract month was 
 
 ---
 
+## Patch 2026-07-21c — "Two Threads, One Doorway"
+
+We caught the freeze in the act, took a snapshot of the jammed program, and read the answer straight out of it. After two mornings of guessing, there is no guesswork left.
+
+### 🔍 What was actually happening
+Two things inside the platform each grabbed a door handle and then waited for the other's door.
+
+- **The fill handler** picked up the strategy's own "I'm working on this symbol" latch, then — while still holding it — went to read recent bar data to build its exit record. Reading bar data quietly requires the platform's *internal* latch.
+- **At that same instant, a price update** was already holding the platform's internal latch, and was reaching for the strategy's symbol latch to run the bar logic.
+
+Neither could let go. Each was holding exactly what the other needed. Everything stopped there, permanently, until someone intervened.
+
+### 💡 Why it only happened twice
+It needs a price tick to land on the *same* strategy instance in the *same* instant as a stop-loss fill. Almost every fill misses that window — two other stops closed cleanly that same morning, minutes either side of the one that jammed. That's also why it could never be reproduced on demand: it's a race, not a repeatable sequence.
+
+### 💡 Why one stuck strategy froze all of them
+The symbol latch belongs to a single strategy instance, so this isn't strategies fighting each other. The platform hands out fill notifications to every strategy **one at a time on a single thread**. Once that thread was stuck inside one strategy, no other strategy on that connection heard anything again.
+
+### ❌ Correction to the previous patch note
+The suspect list was wrong. The shared log-file locks — trade log, slippage log, template ledger — are **not involved at all**. That theory is dead.
+
+### ⚠️ Known issue — wider than first thought
+The same collision is possible anywhere the strategy reads bar data while holding that symbol latch from a non-bar thread. That includes order updates and, notably, the **tick-by-tick trailing stop**, which runs on every price change while a position is open. The fill path is simply where the dice landed twice.
+
+*Dev note: fix direction is to stop reading bar series while holding the symbol latch off the bar thread — snapshot the values on the bar thread and let the fill handler consume the snapshot, or defer building the record to the next bar. Deliberately NOT trying to acquire the two latches in a consistent order: the platform's is internal and can't be taken in advance. Not applied yet — the strategy was back online when this was confirmed, and this is an off-hours change.*
+
+*Dev note: the breadcrumbs shipped a couple of hours earlier would have pinned this independently — the last marker written would have been "starting the exit record" with no matching "finished". They're staying in as a tripwire in case the fix ever regresses.*
+
+---
 ## Patch 2026-07-21b — "It Was Never a Misbooked Fill"
 
 Two mornings in a row the whole strategy fleet went silent for half an hour with positions left unmanaged. We now know exactly where it stops — and, just as usefully, that the thing everyone was chasing was never a bug at all.
