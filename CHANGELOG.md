@@ -6,6 +6,29 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ---
 
+## Patch 2026-07-21f — "Three More Of The Same"
+
+The freeze fix earlier today closed one door. Auditing the rest of the strategy found three more doors exactly like it — including one that was being opened on every single price tick.
+
+### 🐛 Fixed
+- **The tick-by-tick trailing stop had the same flaw.** Whenever it adjusted a stop it asked the platform for the current bid or ask, and if that wasn't available it fell back to reading the last bar's close — the very read that causes the freeze. This ran on every price change while a position was open, which makes it the highest-exposure copy of the bug found so far.
+- **Order-status updates had it too**, in the routine that re-arms a protective stop that has gone missing.
+- **And so did the entry side of the fill handler** — the same function whose *exit* side was fixed a couple of hours ago. Different branch, same mistake, still live until now.
+
+All three now read a small running cache of the last traded price instead. The cache is fed straight from the price feed, which costs nothing and involves no risky read at all.
+
+### ⚖️ Balance
+- **A missing price reference can no longer trigger a liquidation.** The re-arm routine's fallback path *flattens the position* when it decides the intended stop is no longer valid. Left naive, "I don't know the price yet" would have counted as "not valid" and closed the trade. It now leaves the position alone and tries again on the next pass.
+- **Entry stops fall back to the fill price itself** when bid/ask are unavailable — always present, and a more accurate reference than the last bar's close.
+
+### ✅ Checked and left alone
+Every other place the strategy reads bar data was traced back to the thread it runs on. All of them run on the bar-update path, where that read is safe and always has been: position management, the daily loss limit, the P&L rollups, entry submission.
+
+*Dev note: the audit was the point, not the patch. Each bar-data read was mapped to its enclosing method and each method traced to its thread of origin, rather than pattern-matching on what "looked like" the original bug. That's what turned up the entry-fill branch sitting in the same function that had already been fixed once.*
+
+*Dev note on what's NOT closed: the paths that hand work back to the strategy after an ML service reply. Whether that hand-off already holds the platform's internal latch isn't something the crash dump can answer. They don't read bar data today, so they're not exposed — but anyone adding such a read there would reopen this exact bug. Flagged rather than guessed at.*
+
+---
 ## Patch 2026-07-21e — "Ask Before You Knock"
 
 The freeze from the last two mornings is fixed.
