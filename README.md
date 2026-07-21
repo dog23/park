@@ -10,8 +10,17 @@ A self-operating algorithmic trading system I designed and built solo — **~29,
 - **The strategies** the models drive (`temalimit`, live; `TrendTcnStrategy`).
 - **Dashboards** for model health, live trades, and trend predictions.
 - **Self-operating automation** — a watchdog mesh, circuit breakers, off-site disaster-recovery backups, and phone alerts, all as scheduled tasks that survive logout and reboot.
+- **Auto-tuning** — the "Reassess" automations that adjust the strategy's own sizing/gate/pullback constants from live-trade evidence: **[AUTO-TUNING.md](AI%20Deep%20Learning%20Automation/AUTO-TUNING.md)**.
 
 **Start at → [the overview](AI%20Deep%20Learning%20Automation/README.md).**
+
+| Read this for… | |
+|---|---|
+| How it's built, ports, data flow | [ARCHITECTURE.md](AI%20Deep%20Learning%20Automation/ARCHITECTURE.md) |
+| Installing the servers, strategy, tasks, rclone | [SETUP.md](AI%20Deep%20Learning%20Automation/SETUP.md) |
+| What each model sees & how features are computed | [FEATURES.md](AI%20Deep%20Learning%20Automation/FEATURES.md) |
+| Checking for data poison, running validation tests, retraining | [MAINTENANCE.md](AI%20Deep%20Learning%20Automation/MAINTENANCE.md) |
+| How the Reassess auto-tuning automations work | [AUTO-TUNING.md](AI%20Deep%20Learning%20Automation/AUTO-TUNING.md) |
 
 ## Strategies
 
