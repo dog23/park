@@ -41,7 +41,7 @@ All three are small **PyTorch** networks, trained **per instrument + data series
 - **Optimizer** — AdamW, weight decay `1e-4`; ~8 epochs (entry) / 30 (trend), keeping the best-validation checkpoint so an overfit late epoch is discarded.
 - **Sample weighting** — shadow-traded samples train at weight **0.2**, so they inform the model without outvoting real live trades.
 - **Sequences (exit)** — variable-length trades are packed/padded, inputs normalized by stored mean/std, and a little noise is added to sequences during training for robustness.
-- Features are computed in [`feature_utils.py`](MLService/feature_utils.py) / [`trend_utils.py`](MLService_Trend/trend_utils.py).
+- Features are computed strategy-side and validated in [`feature_utils.py`](MLService/feature_utils.py) / [`trend_utils.py`](MLService_Trend/trend_utils.py). **The full feature list — what each one is and how it's computed — is in [../FEATURES.md](../FEATURES.md).**
 
 ## Data-integrity verification suites
 

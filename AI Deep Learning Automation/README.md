@@ -24,6 +24,7 @@ Redacted snapshot: 39 source files, ~30,000 lines. See [Redaction](#redaction).
 - **Exit model** — a separate model that predicts **hold / exit early** on open positions. Only loaded when it passes minimum-AUC and minimum-example checks.
 - **Trend model** — a temporal convolutional network (TCN) for multi-market trend breakouts.
 - **Training** — models retrain daily on the strategies' own trade logs, with validation splits and automated data-integrity checks (leakage, duplicate windows, label drift, etc.).
+- **Features** — what each model sees and how every feature is computed: see **[FEATURES.md](FEATURES.md)**.
 
 ### The strategies — turn predictions into orders *([strategies/](strategies/), [addons/](addons/))*
 - **`temalimit`** *(live)* — limit-order strategy on TEMA / Bollinger / VWAP crossovers with momentum filters, template rotation, and a two-stage exit ladder. Calls the entry and exit models.
