@@ -6,6 +6,17 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 
 ---
 
+## Patch 2026-07-20v — "The Cap That Capped the Wrong Thing"
+
+The new "Exp" column from the last patch immediately did its job: it showed the expiry cap wasn't actually holding at 7 minutes like intended, for the loosest set of templates. Good catch, caught fast, fixed properly this time.
+
+### 🐛 Fixed
+- **The 7-minute expiry cap wasn't a total — it was an add-on.** Earlier tonight's fix limited how much extra time the auto-tuner could bolt onto the base wait time, but never limited the final number itself. The base wait already ranges 2–6 minutes on its own, so orders could still run up to 13 minutes total once the extra was added — nearly double what "capped at 7" was supposed to mean. Now there's a real ceiling on the final number: no order, on any template, can ever wait longer than 7 minutes before canceling, no matter what the auto-tuner does.
+
+*Dev note: added a genuine hard ceiling (`EntryOrderExpireMinutesHardCap = 7`) around the final computed value in temalimit.cs, replacing the old blanket 30-minute safety clamp — independent of whatever the auto-tuner's "extra" constant is set to. Reset the T20-40 extra back to 0 so templates keep their natural 2–6 minute spread instead of all flattening to exactly 7. Lowered the automation's own extra-headroom to 1 minute to match. Verified the worst case across every selectivity value and both template tiers never exceeds 7.*
+
+---
+
 ## Patch 2026-07-20u — "How Long Before It Gives Up"
 
 Small dashboard addition: the Pending Trades table now tells you exactly when a working limit order will cancel itself.
