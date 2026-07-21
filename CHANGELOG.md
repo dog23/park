@@ -11,8 +11,8 @@ See [wireframes/](wireframes/) for diagrams (referenced inline below). Static re
 Pending Trades has always shown "Placed" — the moment a limit order goes out. But the second that order filled, that timestamp vanished: every other table only showed the *fill* time. So you could never look back at a finished trade and see how long it sat waiting to get filled. Now you can.
 
 ### 🆕 New
-- **"Placed" column added to Live Trades and Completed Trades**, sitting right next to "Opened". Opened = when the order filled. Placed = when it was originally sent. The gap between them is how long the limit sat working.
-- **The trade chart popup now shows it too**, as an "Entry Placed" tile that also spells out the wait — e.g. *"waited 4m 12s"*.
+- **"Placed" column added to Live Trades and Completed Trades**, as the *first* column — the tables now read left-to-right in the order things actually happened: **Placed → Opened → Closed**. Placed = when the limit order was sent, Opened = when it filled. The gap between them is how long the order sat working.
+- **The trade chart popup now shows it too**, as an "Entry Placed" tile that also spells out the wait — e.g. *"Jul 20 23:33:10 · waited 04m 34s"*. The tile always appears on a filled trade, showing "--" rather than vanishing when the trade predates the new column.
 
 ### 🐛 Fixed
 - **First attempt looked broken, and was.** Placed and Opened showed identical times on every row. Two separate causes, both now fixed: the display was quietly falling back to the fill time whenever the real placed time was unknown (making an unknown look like a real, always-instant fill), and the strategy was reading a value that gets erased the instant an order fills — so it would have stayed blank forever. Unknown now honestly shows "--".
