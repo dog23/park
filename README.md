@@ -13,6 +13,13 @@ A self-operating algorithmic trading system I designed and built solo — **~29,
 
 **Start at → [the overview](AI%20Deep%20Learning%20Automation/README.md).**
 
+## Strategies
+
+- **[temalimit](AI%20Deep%20Learning%20Automation/strategies/temalimit.cs)** *(live)* — limit-order strategy on TEMA / Bollinger / VWAP crossovers, driven by the entry and exit models.
+- **[TrendTcnStrategy](AI%20Deep%20Learning%20Automation/strategies/TrendTcnStrategy.cs)** — multi-market trend breakouts driven by the trend TCN.
+
+More on each: [strategies/README.md](AI%20Deep%20Learning%20Automation/strategies/README.md).
+
 ## Also here
 
 - [CHANGELOG.md](CHANGELOG.md) — plain-English patch notes for `temalimit` and the rest of the stack, written game-patch style (dated patches, ✨ New / 🎨 UI / ⚖️ Balance / 🐛 Fixed / 🔧 Under the hood / 🧭 Known issues sections). Doubles as evidence of shipping cadence.
