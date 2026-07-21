@@ -77,11 +77,19 @@ Tier 2 (t > 19):
 
 ---
 
-## 4. Pullback ratio (ATR-bound pullback ticks, per tier group ≤17 / ≥18)
+## 4. Pullback ratio (ATR-bound pullback ticks, per template × instrument bucket)
 
 **What's measured**: for each no-fill event, `missedByTicks` — how many ticks short the pullback fell of what would have filled.
 
-**Decrease** (data-derived): with **≥5 real measured misses** (not just no-fill *events* — older rows predate the `missedByTicks` field, so a bucket with 19 no-fills but only 1 measured miss does **not** qualify), `suggested = max(1, current_ticks − ceil(avg_missed))`.
+**Decrease is a *weighted* mean, not a plain average.** Each no-fill's `missedByTicks` is weighted by how much of its own watch window actually ran (`_pullback_watch_weight`, from `waitedMinutes` / `expireMinutesUsed`):
+- A no-fill cut short before watching **≥10%** of its own `EntryOrderExpireMinutes` window (`FULL_WATCH_FLOOR_FRACTION = 0.10`) — e.g. a session boundary or manual cancel — is **dropped entirely**, before it even reaches the reassess function. It never got enough of its window to be meaningful evidence.
+- Everything else is weighted by the **fraction of its window actually watched**: a no-fill cut short at 33% of its expiry counts for a third of a full-duration miss — real signal, but discounted, rather than being treated as equal to (or thrown away like) a genuine full-window miss.
+
+`avg_missed = Σ(missedByTicks × weight) / Σ(weight)` across the bucket's weighted samples.
+
+With **≥5 real measured samples** and a positive weighted average (not just no-fill *events* — older rows predate the `missedByTicks` field, so a bucket with 19 no-fills but only 1 measured miss does **not** qualify): `suggested = max(MIN_PULLBACK_TICKS_FLOOR, current_ticks − ceil(avg_missed))`.
+
+**Hard floor: `MIN_PULLBACK_TICKS_FLOOR = 5`.** The decrease direction can never propose below 5 ticks, full stop — this mirrors `temalimit.cs`'s own `MinPullbackTicks` and exists specifically because an earlier unbounded decrease path ratcheted the pullback down to ~0.012 (effectively a 1-tick regime) during the July 19–20 evidence-storm incident, which turned out to be a net-loser setup. The floor makes that failure mode structurally impossible now, regardless of what the evidence says.
 
 **Increase** (heuristic): only when there's **at most 1** no-fill in the window and **≥5** fills — `suggested = current_ticks + max(1, round(current_ticks × 0.15))`, i.e. widen by 15%, minimum 1 tick.
 
